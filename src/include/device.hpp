@@ -5,11 +5,16 @@
 
 namespace Emulator {
 
+enum class DeviceType {
+};
+
 class Device {
     public:
-        virtual Byte read(Byte address) = 0;
-        virtual void write(Byte address, Byte value) = 0;
-        virtual Byte page() const = 0;
+        virtual Byte read(Byte page, Byte offset) = 0;
+        virtual void write(Byte page, Byte offset, Byte value) = 0;
+        virtual Byte startPage() const = 0;
+        virtual Byte size() const = 0; /**< Number of pages */
+        virtual DeviceType type() = 0;
 
         virtual ~Device() = default;
 };
