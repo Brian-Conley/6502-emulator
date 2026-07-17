@@ -7,6 +7,7 @@ namespace Emulator {
 
 enum class DeviceType {
     RAM,
+    ROM,
 };
 
 class Device {
