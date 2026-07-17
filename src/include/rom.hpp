@@ -9,7 +9,7 @@ namespace Emulator {
 
 class ROM : public Device {
     public:
-        ROM(Byte startPage, Byte size);
+        ROM(Byte startPage, Byte size, const std::vector<Byte>& data);
 
         Byte read(Byte page, Byte offset) override final;
         void write(Byte /*page*/, Byte /*offset*/, Byte /*value*/) override final;

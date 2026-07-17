@@ -11,6 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(mos6502_lib
     src/bus.cpp
     src/ram.cpp
+    src/rom.cpp
 )
 
 target_include_directories(mos6502_lib PUBLIC

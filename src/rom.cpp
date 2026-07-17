@@ -1,14 +1,22 @@
 #include "rom.hpp"
+#include "bytes.hpp"
 #include "device.hpp"
 
 namespace Emulator {
 
-ROM::ROM(Byte startPage, Byte size) :
+ROM::ROM(Byte startPage, Byte size, const std::vector<Byte>& data) :
     m_memory(size << 8),
     m_startPage(startPage),
     m_endPage(startPage + size - 1),
     m_size(size)
-{}
+{
+    size_t dataSize = data.size();
+    if (m_memory.size() < dataSize)
+        dataSize = m_memory.size();
+
+    for (size_t i = 0; i < dataSize; ++i)
+        m_memory[i] = data[i];
+}
 
 Byte ROM::read(Byte page, Byte offset) {
     return m_memory[(localPage(page) << 8) | offset];
