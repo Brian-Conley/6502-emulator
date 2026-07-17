@@ -1,10 +1,11 @@
-#include "include/bus.hpp"
+#include "bus.hpp"
+#include <memory>
 
 namespace Emulator {
 
 Bus::Bus() {}
 
-void Bus::registerDevice(Device* device) {
+void Bus::registerDevice(std::shared_ptr<Device> device) {
     if (!device) return;
     Byte startPage = device->startPage();
     Byte size = device->size();

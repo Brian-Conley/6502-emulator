@@ -6,6 +6,7 @@
 namespace Emulator {
 
 enum class DeviceType {
+    RAM,
 };
 
 class Device {
@@ -14,7 +15,7 @@ class Device {
         virtual void write(Byte page, Byte offset, Byte value) = 0;
         virtual Byte startPage() const = 0;
         virtual Byte size() const = 0; /**< Number of pages */
-        virtual DeviceType type() = 0;
+        virtual DeviceType type() const = 0;
 
         virtual ~Device() = default;
 };

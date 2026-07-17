@@ -4,6 +4,7 @@
 #include "bytes.hpp"
 #include "device.hpp"
 #include <array>
+#include <memory>
 
 namespace Emulator {
 
@@ -11,12 +12,12 @@ class Bus {
     public:
         Bus();
 
-        void registerDevice(Device* device);
+        void registerDevice(std::shared_ptr<Device> device);
         void write(Word address, Byte value);
         Byte read(Word address);
 
     private:
-        std::array<Device*, 256> pageMap{};
+        std::array<std::shared_ptr<Device>, 256> pageMap{};
 };
 
 }
