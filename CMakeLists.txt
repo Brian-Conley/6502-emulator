@@ -43,7 +43,5 @@ target_link_libraries(mos6502 PRIVATE
 # Tests
 # ------------------------------
 
-#if (BUILD_TESTS)
-    #enable_testing()
-    #add_subdirectory(tests)
-#endif()
+enable_testing()
+add_subdirectory(tests)
