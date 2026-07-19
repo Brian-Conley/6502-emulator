@@ -33,10 +33,9 @@ Byte ROM::localPage(Byte page) {
     // The bus should always assign valid pages and call read/write with valid addresses.
     // But, manual calls outside the bus might provide invalid parameters,
     //   so this will just default to page 0 in such cases.
-    int lp = page - m_startPage;
-    if (lp < 0 || lp > m_endPage)
+    if (page < m_startPage || page > m_endPage)
         return 0x00;
-    return lp;
+    return page - m_startPage;
 }
 
 }
