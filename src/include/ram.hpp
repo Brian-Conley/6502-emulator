@@ -7,24 +7,33 @@
 
 namespace Emulator {
 
-class RAM : public Device {
+/**
+ * @brief Concrete implementation of Random Access Memory.
+ */
+class RAM final : public Device {
     public:
+        /**
+         * @brief Constructs the RAM module with specific page allocation.
+         *
+         * @param startPage The starting page in the global address space.
+         * @param size The total number of pages to allocate.
+         */
         RAM(Byte startPage, Byte size);
 
-        Byte read(Byte page, Byte offset) override final;
-        void write(Byte page, Byte offset, Byte value) override final;
-        Byte startPage() const override final;
-        Byte size() const override final; /**< Number of pages */
-        DeviceType type() const override final;
+        /**
+         * @copydoc Device::read
+         */
+        Byte read(Byte page, Byte offset) override;
+
+        /**
+         * @copydoc Device::write
+         */
+        void write(Byte page, Byte offset, Byte value) override;
 
         ~RAM() override = default;
 
     private:
-        Byte localPage(Byte page);
         std::vector<Byte> m_memory;
-        const Byte m_startPage;
-        const Byte m_endPage;
-        const Byte m_size;
 };
 
 }

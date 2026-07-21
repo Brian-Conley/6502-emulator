@@ -1,21 +1,16 @@
 #include "rom.hpp"
 #include "bytes.hpp"
 #include "device.hpp"
+#include <algorithm>
 
 namespace Emulator {
 
 ROM::ROM(Byte startPage, Byte size, const std::vector<Byte>& data) :
-    m_memory(size << 8),
-    m_startPage(startPage),
-    m_endPage(startPage + size - 1),
-    m_size(size)
+    Device(startPage, size, DeviceType::ROM),
+    m_memory(size << 8)
 {
-    size_t dataSize = data.size();
-    if (m_memory.size() < dataSize)
-        dataSize = m_memory.size();
-
-    for (size_t i = 0; i < dataSize; ++i)
-        m_memory[i] = data[i];
+    size_t bytesToCopy = std::min(data.size(), m_memory.size());
+    std::copy_n(data.begin(), bytesToCopy, m_memory.begin());
 }
 
 Byte ROM::read(Byte page, Byte offset) {
@@ -23,19 +18,5 @@ Byte ROM::read(Byte page, Byte offset) {
 }
 
 void ROM::write(Byte /*page*/, Byte /*offset*/, Byte /*value*/) { return; }
-
-Byte ROM::startPage() const { return m_startPage; }
-Byte ROM::size() const { return m_size; }
-DeviceType ROM::type() const { return DeviceType::ROM; }
-
-Byte ROM::localPage(Byte page) {
-    // This bounds check is completely redundant under normal execution.
-    // The bus should always assign valid pages and call read/write with valid addresses.
-    // But, manual calls outside the bus might provide invalid parameters,
-    //   so this will just default to page 0 in such cases.
-    if (page < m_startPage || page > m_endPage)
-        return 0x00;
-    return page - m_startPage;
-}
 
 }
