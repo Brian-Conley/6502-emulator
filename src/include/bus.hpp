@@ -25,9 +25,10 @@ class Bus {
          *
          * @param device The target Device object for page allocations.
          *
-         * @note Registering a device can overwrite existing page allocations.
+         * @retval true The device registered successfully.
+         * @retval false The device failed to register.
          */
-        void registerDevice(std::shared_ptr<Device> device);
+        [[maybe_unused]] bool registerDevice(std::shared_ptr<Device> device);
 
         /**
          * @brief Write a value to the specified address.

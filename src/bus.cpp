@@ -5,15 +5,22 @@ namespace Emulator {
 
 Bus::Bus() {}
 
-void Bus::registerDevice(std::shared_ptr<Device> device) {
-    if (!device) return;
+bool Bus::registerDevice(std::shared_ptr<Device> device) {
+    if (!device) return false;
     Byte startPage = device->startPage();
     Byte size = device->size();
     Word endPage = startPage + size - 1;
-    if (size == 0 || endPage > 0xFF) return;
+    if (size == 0 || endPage > 0xFF) return false;
 
+    // Check if an existing device is already registered to these pages
+    for (int i = startPage; i < (startPage + size); ++i)
+        if(pageMap[i]) return false;
+
+    // Register the device to the pages
     for (int i = startPage; i < (startPage + size); ++i)
         pageMap[i] = device;
+
+    return true;
 }
 
 void Bus::write(Word address, Byte value) {
