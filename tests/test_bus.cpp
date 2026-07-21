@@ -15,13 +15,13 @@ TEST_CASE("Registering Device objects", "[Bus]") {
     auto ram3 = std::make_shared<RAM>(0x10, 0x05);
 
     SECTION("Register every page in the address space with two devices") {
-        REQUIRE(bus.registerDevice(ram1) == true);
-        REQUIRE(bus.registerDevice(ram2) == true);
+        REQUIRE(bus.registerDevice(ram1));
+        REQUIRE(bus.registerDevice(ram2));
     }
 
     SECTION("Attempt to register a device to pages that are already registered") {
-        bus.registerDevice(ram1);
-        REQUIRE(bus.registerDevice(ram3) == false);
+        REQUIRE(bus.registerDevice(ram1));
+        REQUIRE_FALSE(bus.registerDevice(ram3));
     }
 }
 
