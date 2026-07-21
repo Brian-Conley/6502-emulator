@@ -40,7 +40,7 @@ Byte Bus::read(Word address) {
     Byte offset = address & 0xFF;
 
     // Check if a device is assigned to the page.
-    if (pageMap[page] != nullptr) [[likely]] {
+    if (pageMap[page] != nullptr) {
         // If yes, read from device register.
         return pageMap[page]->read(page, offset);
     }
