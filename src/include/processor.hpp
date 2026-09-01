@@ -15,6 +15,10 @@ class Mos6502 {
         void step(); /**< Execute one instruction. */
         void run();  /**< Continuously execute instructions until termination. */
 
+        void powerOn();  /**< Set powered flag. */
+        void powerOff(); /**< Clear powered flag. */
+        bool powerStatus(); /**< Get powered flag. */
+
         void reset();
         void irq();
         void nmi();
@@ -32,6 +36,7 @@ class Mos6502 {
         unsigned int CumulativeCycles; /**< Used for controlling the run speed. */
         Bus& SystemBus; /**< Handles memory reads/writes for memory and devices. */
         const std::array<Instruction, 256> opcodeTable; /**< Lookup table for instructions. */
+        bool powered; /**< Determine if instructions should be running. */
 
         /** @name Registers */
         ///@{
@@ -45,7 +50,7 @@ class Mos6502 {
 
         /** @name Status Register Helpers */
         ///@{
-        enum Flags : Byte {
+        enum class Flags : Byte {
             C = (1 << 0), // Carry
             Z = (1 << 1), // Zero
             I = (1 << 2), // Interrupt Disable
@@ -57,6 +62,16 @@ class Mos6502 {
         };
         void setFlag(Flags flag, bool state);
         bool getFlag(Flags flag) const;
+        void setCarryFromValue(Word value);
+        void setZeroFromValue(Byte value);
+        void setOverflowFromValue(Byte value, Byte operand1, Byte operand2);
+        void setNegativeFromValue(Byte value);
+        ///@}
+
+        /** @name Stack Operations */
+        ///@{
+        void stackPush(Byte value);
+        Byte stackPull();
         ///@}
 
         /** @name Memory Operations */
@@ -76,81 +91,81 @@ class Mos6502 {
             bool pageCrossed;
         };
         ResolvedAddress resolveAddress(AddressingMode mode); /**< Helper to dispatch the correct addressing mode. */
-        // Word addrA();
-        Word addrAbsolute();
-        Word addrAbsoluteX();
-        Word addrAbsoluteY();
-        Word addrImmediate();
-        // Word addrImplied();
-        Word addrIndirect();
-        Word addrIndirectX();
-        Word addrIndirectY();
-        Word addrRelative();
-        Word addrZeroPage();
-        Word addrZeroPageX();
-        Word addrZeroPageY();
-        Word addrUnknown();
+        // ResolvedAddress addrA();
+        ResolvedAddress addrAbsolute();
+        ResolvedAddress addrAbsoluteX();
+        ResolvedAddress addrAbsoluteY();
+        ResolvedAddress addrImmediate();
+        // ResolvedAddress addrImplied();
+        ResolvedAddress addrIndirect();
+        ResolvedAddress addrIndirectX();
+        ResolvedAddress addrIndirectY();
+        ResolvedAddress addrRelative();
+        ResolvedAddress addrZeroPage();
+        ResolvedAddress addrZeroPageX();
+        ResolvedAddress addrZeroPageY();
+        ResolvedAddress addrUnknown();
         ///@}
 
         /** @name Instructions */
         ///@{
-        void opADC(AddressingMode mode, unsigned int baseCycles);
-        void opAND(AddressingMode mode, unsigned int baseCycles);
-        void opASL(AddressingMode mode, unsigned int baseCycles);
-        void opBCC(AddressingMode mode, unsigned int baseCycles);
-        void opBCS(AddressingMode mode, unsigned int baseCycles);
-        void opBEQ(AddressingMode mode, unsigned int baseCycles);
-        void opBIT(AddressingMode mode, unsigned int baseCycles);
-        void opBMI(AddressingMode mode, unsigned int baseCycles);
-        void opBNE(AddressingMode mode, unsigned int baseCycles);
-        void opBPL(AddressingMode mode, unsigned int baseCycles);
-        void opBRK(AddressingMode mode, unsigned int baseCycles);
-        void opBVC(AddressingMode mode, unsigned int baseCycles);
-        void opBVS(AddressingMode mode, unsigned int baseCycles);
-        void opCLC(AddressingMode mode, unsigned int baseCycles);
-        void opCLD(AddressingMode mode, unsigned int baseCycles);
-        void opCLI(AddressingMode mode, unsigned int baseCycles);
-        void opCLV(AddressingMode mode, unsigned int baseCycles);
-        void opCMP(AddressingMode mode, unsigned int baseCycles);
-        void opCPX(AddressingMode mode, unsigned int baseCycles);
-        void opCPY(AddressingMode mode, unsigned int baseCycles);
-        void opDEC(AddressingMode mode, unsigned int baseCycles);
-        void opDEX(AddressingMode mode, unsigned int baseCycles);
-        void opDEY(AddressingMode mode, unsigned int baseCycles);
-        void opEOR(AddressingMode mode, unsigned int baseCycles);
-        void opINC(AddressingMode mode, unsigned int baseCycles);
-        void opINX(AddressingMode mode, unsigned int baseCycles);
-        void opINY(AddressingMode mode, unsigned int baseCycles);
-        void opJMP(AddressingMode mode, unsigned int baseCycles);
-        void opJSR(AddressingMode mode, unsigned int baseCycles);
-        void opLDA(AddressingMode mode, unsigned int baseCycles);
-        void opLDX(AddressingMode mode, unsigned int baseCycles);
-        void opLDY(AddressingMode mode, unsigned int baseCycles);
-        void opLSR(AddressingMode mode, unsigned int baseCycles);
-        void opNOP(AddressingMode mode, unsigned int baseCycles);
-        void opORA(AddressingMode mode, unsigned int baseCycles);
-        void opPHA(AddressingMode mode, unsigned int baseCycles);
-        void opPHP(AddressingMode mode, unsigned int baseCycles);
-        void opPLA(AddressingMode mode, unsigned int baseCycles);
-        void opPLP(AddressingMode mode, unsigned int baseCycles);
-        void opROL(AddressingMode mode, unsigned int baseCycles);
-        void opROR(AddressingMode mode, unsigned int baseCycles);
-        void opRTI(AddressingMode mode, unsigned int baseCycles);
-        void opRTS(AddressingMode mode, unsigned int baseCycles);
-        void opSBC(AddressingMode mode, unsigned int baseCycles);
-        void opSEC(AddressingMode mode, unsigned int baseCycles);
-        void opSED(AddressingMode mode, unsigned int baseCycles);
-        void opSEI(AddressingMode mode, unsigned int baseCycles);
-        void opSTA(AddressingMode mode, unsigned int baseCycles);
-        void opSTX(AddressingMode mode, unsigned int baseCycles);
-        void opSTY(AddressingMode mode, unsigned int baseCycles);
-        void opTAX(AddressingMode mode, unsigned int baseCycles);
-        void opTAY(AddressingMode mode, unsigned int baseCycles);
-        void opTSX(AddressingMode mode, unsigned int baseCycles);
-        void opTXA(AddressingMode mode, unsigned int baseCycles);
-        void opTXS(AddressingMode mode, unsigned int baseCycles);
-        void opTYA(AddressingMode mode, unsigned int baseCycles);
-        void opUnknown(AddressingMode mode, unsigned int baseCycles);
+        void opADC(AddressingMode mode);
+        void opAND(AddressingMode mode);
+        void opASL(AddressingMode mode);
+        void opBCC(AddressingMode mode);
+        void opBCS(AddressingMode mode);
+        void opBEQ(AddressingMode mode);
+        void opBIT(AddressingMode mode);
+        void opBMI(AddressingMode mode);
+        void opBNE(AddressingMode mode);
+        void opBPL(AddressingMode mode);
+        void opBRK(AddressingMode mode);
+        void opBVC(AddressingMode mode);
+        void opBVS(AddressingMode mode);
+        void opCLC(AddressingMode mode);
+        void opCLD(AddressingMode mode);
+        void opCLI(AddressingMode mode);
+        void opCLV(AddressingMode mode);
+        void opCMP(AddressingMode mode);
+        void opCPX(AddressingMode mode);
+        void opCPY(AddressingMode mode);
+        void opDEC(AddressingMode mode);
+        void opDEX(AddressingMode mode);
+        void opDEY(AddressingMode mode);
+        void opEOR(AddressingMode mode);
+        void opINC(AddressingMode mode);
+        void opINX(AddressingMode mode);
+        void opINY(AddressingMode mode);
+        void opJMP(AddressingMode mode);
+        void opJSR(AddressingMode mode);
+        void opLDA(AddressingMode mode);
+        void opLDX(AddressingMode mode);
+        void opLDY(AddressingMode mode);
+        void opLSR(AddressingMode mode);
+        void opNOP(AddressingMode mode);
+        void opORA(AddressingMode mode);
+        void opPHA(AddressingMode mode);
+        void opPHP(AddressingMode mode);
+        void opPLA(AddressingMode mode);
+        void opPLP(AddressingMode mode);
+        void opROL(AddressingMode mode);
+        void opROR(AddressingMode mode);
+        void opRTI(AddressingMode mode);
+        void opRTS(AddressingMode mode);
+        void opSBC(AddressingMode mode);
+        void opSEC(AddressingMode mode);
+        void opSED(AddressingMode mode);
+        void opSEI(AddressingMode mode);
+        void opSTA(AddressingMode mode);
+        void opSTX(AddressingMode mode);
+        void opSTY(AddressingMode mode);
+        void opTAX(AddressingMode mode);
+        void opTAY(AddressingMode mode);
+        void opTSX(AddressingMode mode);
+        void opTXA(AddressingMode mode);
+        void opTXS(AddressingMode mode);
+        void opTYA(AddressingMode mode);
+        void opUnknown(AddressingMode mode);
         ///@}
 
 };
