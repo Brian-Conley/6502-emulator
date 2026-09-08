@@ -5,7 +5,7 @@
 namespace Emulator {
 
 PixelDisplay::PixelDisplay(Byte startPage, Byte size, size_t width, size_t height, Display::RefreshRate refreshRate) :
-    Display(startPage, size, DeviceType::DISPLAY_ASCII, width, height, refreshRate),
+    Display(startPage, size, DeviceType::DISPLAY_PIXEL, width, height, refreshRate),
     m_frameData(width*height, { Color::reset, 0x20 })
 {}
 
