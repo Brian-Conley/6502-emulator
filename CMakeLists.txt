@@ -19,6 +19,7 @@ add_library(mos6502_lib
     src/display.cpp
     src/ascii_display.cpp
     src/pixel_display.cpp
+    src/constructors.cpp
 )
 
 target_include_directories(mos6502_lib PUBLIC

@@ -70,6 +70,7 @@ class Display : public Device {
         size_t m_height; /**< How many lines are in the display. */
         RefreshRate m_refreshRate; /**< How many times per second to refresh the display. */
         std::vector<Byte> m_buffer; /**< Raw memory buffer of the display. */
+        std::vector<Pixel> m_frameData; /**< Frame buffer. */
 
     private:
         Display() = delete;

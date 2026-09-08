@@ -36,7 +36,8 @@ Display::Display(Byte startPage, Byte size, DeviceType type, size_t width, size_
     m_width(width),
     m_height(height),
     m_refreshRate(refreshRate),
-    m_buffer(256*size, 0x00)
+    m_buffer(256*size, 0x00),
+    m_frameData(width*height, { Color::reset, 0x20 })
 {}
 
 }

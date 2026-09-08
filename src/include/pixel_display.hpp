@@ -4,7 +4,6 @@
 #include "bytes.hpp"
 #include "display.hpp"
 #include "frame.hpp"
-#include <vector>
 
 namespace Emulator {
 
@@ -47,8 +46,6 @@ class PixelDisplay final : public Display {
 
     private:
         PixelDisplay() = delete;
-
-        std::vector<Pixel> m_frameData; /**< Frame buffer. */
 };
 
 }

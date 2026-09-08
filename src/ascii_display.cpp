@@ -5,8 +5,7 @@
 namespace Emulator {
 
 AsciiDisplay::AsciiDisplay(Byte startPage, Byte size, size_t width, size_t height, Display::RefreshRate refreshRate) :
-    Display(startPage, size, DeviceType::DISPLAY_ASCII, width, height, refreshRate),
-    m_frameData(width*height, { Color::reset, 0x20 })
+    Display(startPage, size, DeviceType::DISPLAY_ASCII, width, height, refreshRate)
 {}
 
 Byte AsciiDisplay::read(Byte page, Byte offset) {

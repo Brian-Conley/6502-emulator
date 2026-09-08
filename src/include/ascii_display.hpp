@@ -47,8 +47,6 @@ class AsciiDisplay final : public Display {
 
     private:
         AsciiDisplay() = delete;
-
-        std::vector<Pixel> m_frameData; /**< Frame buffer. */
 };
 
 }
