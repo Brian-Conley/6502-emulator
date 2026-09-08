@@ -1,5 +1,5 @@
-#ifndef RAM_HPP
-#define RAM_HPP
+#ifndef MEMORY_HPP
+#define MEMORY_HPP
 
 #include "bytes.hpp"
 #include "device.hpp"
@@ -8,17 +8,19 @@
 namespace Emulator {
 
 /**
- * @brief Concrete implementation of Random Access Memory.
+ * @brief Concrete implementation of Memory.
  */
-class RAM final : public Device {
+class Memory final : public Device {
     public:
         /**
-         * @brief Constructs the RAM module with specific page allocation.
+         * @brief Constructs the Memory module with specific page allocation.
          *
          * @param startPage The starting page in the global address space.
          * @param size The total number of pages to allocate.
+         * @param isReadOnly True for ROM, false for RAM.
+         * @param initData Initialize the internal buffer to the provided data.
          */
-        RAM(Byte startPage, Byte size);
+        Memory(Byte startPage, Byte size, bool isReadOnly = false, const std::vector<Byte>& initData = {});
 
         /**
          * @copydoc Device::read
@@ -30,10 +32,11 @@ class RAM final : public Device {
          */
         void write(Byte page, Byte offset, Byte value) override;
 
-        ~RAM() override = default;
+        ~Memory() override = default;
 
     private:
         std::vector<Byte> m_memory;
+        bool m_isReadOnly;
 };
 
 }

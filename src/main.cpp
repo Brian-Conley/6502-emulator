@@ -1,14 +1,10 @@
 #include "bus.hpp"
 #include "display.hpp"
 #include "pixel_display.hpp"
-#include "ram.hpp"
 #include "frame.hpp"
 #include <iostream>
 #include <memory>
-#include <ostream>
 #include <sstream>
-#include <vector>
-#include "ascii_display.hpp"
 
 #include <chrono>
 #include <thread>

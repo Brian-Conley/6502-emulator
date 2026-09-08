@@ -13,8 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(mos6502_lib
     src/bus.cpp
     src/device.cpp
-    src/ram.cpp
-    src/rom.cpp
+    src/memory.cpp
     src/processor.cpp
     src/frame.cpp
     src/display.cpp

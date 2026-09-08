@@ -1,18 +1,17 @@
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
-#include "bytes.hpp"
 #include "bus.hpp"
 
 // Used for dummy devices to test page registering and read/write operations
-#include "ram.hpp"
+#include "memory.hpp"
 
 using namespace Emulator;
 
 TEST_CASE("Registering Device objects", "[Bus]") {
     Bus bus;
-    auto ram1 = std::make_shared<RAM>(0x00, 0x80);
-    auto ram2 = std::make_shared<RAM>(0x80, 0x80);
-    auto ram3 = std::make_shared<RAM>(0x10, 0x05);
+    auto ram1 = std::make_shared<Memory>(0x00, 0x80);
+    auto ram2 = std::make_shared<Memory>(0x80, 0x80);
+    auto ram3 = std::make_shared<Memory>(0x10, 0x05);
 
     SECTION("Register every page in the address space with two devices") {
         REQUIRE(bus.registerDevice(ram1));
@@ -27,7 +26,7 @@ TEST_CASE("Registering Device objects", "[Bus]") {
 
 TEST_CASE("Read and write to addresses", "[Bus]") {
     Bus bus;
-    auto ram = std::make_shared<RAM>(0x00, 1);
+    auto ram = std::make_shared<Memory>(0x00, 1);
 
     SECTION("Read and write to a registered address") {
         bus.registerDevice(ram);
