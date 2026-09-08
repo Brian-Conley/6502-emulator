@@ -5,9 +5,13 @@
 
 namespace Emulator {
 
+class Bus;
+
 enum class DeviceType {
     RAM,
     ROM,
+    DISPLAY_ASCII,
+    DISPLAY_PIXEL
 };
 
 /**
@@ -33,9 +37,11 @@ class Device {
          */
         virtual void write(Byte page, Byte offset, Byte value) = 0;
 
-        Byte startPage() const;  /**< First page occupied in the global address space. */
-        Byte size() const;       /**< Number of pages allocated to the object. */
-        DeviceType type() const; /**< Category of the device. */
+        Byte startPage() const;      /**< First page occupied in the global address space. */
+        Byte size() const;           /**< Number of pages allocated to the object. */
+        DeviceType type() const;     /**< Category of the device. */
+        void setBus(Bus* systemBus); /**< Register the system bus to this device. */
+        void setPower(bool status);  /**< Set the device power status. */
 
         virtual ~Device() = default;
 
@@ -50,6 +56,9 @@ class Device {
         Device(Byte startPage, Byte size, DeviceType type);
         const DeviceConfig deviceConfig;
         Byte localPage(Byte page) const;
+
+        bool m_powered;     /**< Used to determine if a device's thread should continue execution. */
+        Bus* m_systemBus;   /**< Reference to the system bus for IRQ signals. */
 };
 
 }

@@ -8,7 +8,9 @@ Device::Device(Byte startPage, Byte size, DeviceType type) :
         static_cast<Byte>(startPage + size - 1),
         size,
         type
-    }
+    },
+    m_powered(false),
+    m_systemBus(nullptr)
 {}
 
 Byte Device::startPage() const { return deviceConfig.startPage; }
@@ -26,5 +28,9 @@ Byte Device::localPage(Byte page) const {
         return 0x00;
     return page - deviceConfig.startPage;
 }
+
+void Device::setBus(Bus* systemBus) { m_systemBus = systemBus; }
+
+void Device::setPower(bool status) { m_powered = status; }
 
 }

@@ -78,6 +78,7 @@ Word Mos6502::registerGet(Register reg) {
         case Register::X:              return x;
         case Register::Y:              return y;
     }
+    return a; // Impossible to reach, this is here to just fix a build error.
 }
 
 void Mos6502::setFlag(Flags flag, bool state) {

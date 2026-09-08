@@ -3,6 +3,8 @@ project(mos6502_emulator VERSION 0.1 LANGUAGES CXX)
 
 # Build settings
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ------------------------------
 # Emulator library
@@ -13,6 +15,11 @@ add_library(mos6502_lib
     src/device.cpp
     src/ram.cpp
     src/rom.cpp
+    src/processor.cpp
+    src/frame.cpp
+    src/display.cpp
+    src/ascii_display.cpp
+    src/pixel_display.cpp
 )
 
 target_include_directories(mos6502_lib PUBLIC
