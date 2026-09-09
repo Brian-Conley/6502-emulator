@@ -31,6 +31,10 @@ Byte Device::localPage(Byte page) const {
 
 void Device::setBus(Bus* systemBus) { m_systemBus = systemBus; }
 
-void Device::setPower(bool status) { m_powered = status; }
+void Device::powerOn() { m_powered = true; }
+
+void Device::powerOff() { m_powered = false; }
+
+bool Device::powerStatus() const { return m_powered; }
 
 }

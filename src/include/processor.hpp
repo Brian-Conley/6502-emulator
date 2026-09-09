@@ -5,6 +5,7 @@
 #include "bytes.hpp"
 #include "instruction.hpp"
 #include <array>
+#include <atomic>
 
 namespace Emulator {
 
@@ -36,7 +37,7 @@ class Mos6502 {
         unsigned int CumulativeCycles; /**< Used for controlling the run speed. */
         Bus& SystemBus; /**< Handles memory reads/writes for memory and devices. */
         const std::array<Instruction, 256> opcodeTable; /**< Lookup table for instructions. */
-        bool powered; /**< Determine if instructions should be running. */
+        std::atomic<bool> powered; /**< Determine if instructions should be running. */
 
         /** @name Registers */
         ///@{

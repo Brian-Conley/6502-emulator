@@ -4,6 +4,7 @@
 #include "bytes.hpp"
 #include "device.hpp"
 #include <array>
+#include <atomic>
 #include <memory>
 
 namespace Emulator {
@@ -58,8 +59,8 @@ class Bus {
 
     private:
         std::array<std::shared_ptr<Device>, 256> pageMap{}; /**< The map of registered pages for each Device. */
-        bool powered; /**< Is the bus turned on? */
-        bool irq;     /**< Is a device requesting an interrupt? */
+        std::atomic<bool> powered; /**< Is the bus turned on? */
+        bool irq; /**< Is a device requesting an interrupt? */
 };
 
 }

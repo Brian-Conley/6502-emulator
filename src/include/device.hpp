@@ -2,6 +2,7 @@
 #define DEVICE_HPP
 
 #include "bytes.hpp"
+#include <atomic>
 
 namespace Emulator {
 
@@ -41,7 +42,9 @@ class Device {
         Byte size() const;           /**< Number of pages allocated to the object. */
         DeviceType type() const;     /**< Category of the device. */
         void setBus(Bus* systemBus); /**< Register the system bus to this device. */
-        void setPower(bool status);  /**< Set the device power status. */
+        virtual void powerOn();      /**< Turn the device on. */
+        virtual void powerOff();     /**< Turn the device off. */
+        bool powerStatus() const;    /**< Get the power status of the device. */
 
         virtual ~Device() = default;
 
@@ -57,8 +60,8 @@ class Device {
         const DeviceConfig deviceConfig;
         Byte localPage(Byte page) const;
 
-        bool m_powered;     /**< Used to determine if a device's thread should continue execution. */
-        Bus* m_systemBus;   /**< Reference to the system bus for IRQ signals. */
+        std::atomic<bool> m_powered; /**< Used to determine if a device's thread should continue execution. */
+        Bus* m_systemBus;            /**< Reference to the system bus for IRQ signals. */
 };
 
 }
