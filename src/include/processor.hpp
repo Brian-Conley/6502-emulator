@@ -6,12 +6,13 @@
 #include "instruction.hpp"
 #include <array>
 #include <atomic>
+#include <memory>
 
 namespace Emulator {
 
 class Mos6502 {
     public:
-        Mos6502(Bus& SystemBus);
+        Mos6502(std::shared_ptr<Bus> SystemBus);
 
         void step(); /**< Execute one instruction. */
         void run();  /**< Continuously execute instructions until termination. */
@@ -38,7 +39,7 @@ class Mos6502 {
         Mos6502() = delete;
 
         unsigned int CumulativeCycles; /**< Used for controlling the run speed. */
-        Bus& SystemBus; /**< Handles memory reads/writes for memory and devices. */
+        std::shared_ptr<Bus> SystemBus; /**< Handles memory reads/writes for memory and devices. */
         const std::array<Instruction, 256> opcodeTable; /**< Lookup table for instructions. */
         std::atomic<bool> powered; /**< Determine if instructions should be running. */
 

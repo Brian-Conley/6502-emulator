@@ -4,7 +4,7 @@
 
 namespace Emulator {
 
-Mos6502::Mos6502(Bus& SystemBus):
+Mos6502::Mos6502(std::shared_ptr<Bus> SystemBus):
     CumulativeCycles(0),
     SystemBus(SystemBus),
     opcodeTable(initializeOpcodeTable()),
@@ -143,15 +143,29 @@ Byte Mos6502::stackPull() {
     return value;
 }
 
-Byte Mos6502::readByte(Word address) { return SystemBus.read(address); }
+Byte Mos6502::readByte(Word address) {
+    if (!SystemBus)
+        return Bus::BUS_BAD_READ_SENTINEL_VALUE;
+    return SystemBus->read(address);
+}
 
-void Mos6502::writeByte(Word address, Byte value) { SystemBus.write(address, value); }
+void Mos6502::writeByte(Word address, Byte value) {
+    if (!SystemBus)
+        return;
+    SystemBus->write(address, value);
+}
 
-Word Mos6502::readWord(Word addressLow) { return (SystemBus.read(addressLow) << 8) + SystemBus.read(addressLow + 1); }
+Word Mos6502::readWord(Word addressLow) {
+    if (!SystemBus)
+        return Bus::BUS_BAD_READ_SENTINEL_VALUE;
+    return (SystemBus->read(addressLow) << 8) + SystemBus->read(addressLow + 1);
+}
 
 void Mos6502::writeWord(Word addressLow, Word value) {
-    SystemBus.write(addressLow, value >> 8);
-    SystemBus.write(addressLow + 1, (value >> 8) & 0xFF);
+    if (!SystemBus)
+        return;
+    SystemBus->write(addressLow, value >> 8);
+    SystemBus->write(addressLow + 1, (value >> 8) & 0xFF);
 }
 
 void Mos6502::executeInstruction() {

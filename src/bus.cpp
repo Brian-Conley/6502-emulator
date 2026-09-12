@@ -45,7 +45,7 @@ Byte Bus::read(Word address) {
         return pageMap[page]->read(page, offset);
     }
     // Address does not map to anything, return a junk sentinel value.
-    return 0xFF;
+    return BUS_BAD_READ_SENTINEL_VALUE;
 }
 
 }

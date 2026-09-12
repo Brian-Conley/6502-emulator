@@ -50,6 +50,8 @@ class Bus {
          */
         Byte read(Word address);
 
+        static constexpr Byte BUS_BAD_READ_SENTINEL_VALUE = 0xFF;
+
     private:
         std::array<std::shared_ptr<Device>, 256> pageMap{}; /**< The map of registered pages for each Device. */
 };
