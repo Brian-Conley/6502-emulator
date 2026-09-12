@@ -14,7 +14,10 @@ Mos6502::Mos6502(Bus& SystemBus):
     sr(0b00100000),
     a(0x00),
     x(0x00),
-    y(0x00)
+    y(0x00),
+    resetRequest(false),
+    irqRequest(false),
+    nmiRequest(false)
 {}
 
 void Mos6502::step() {
@@ -22,6 +25,18 @@ void Mos6502::step() {
 }
 void Mos6502::run() {
     while (powered) {
+        if (resetRequest) {
+            reset();
+            continue;
+        }
+        if (irqRequest) {
+            irq();
+            continue;
+        }
+        if (nmiRequest) {
+            nmi();
+            continue;
+        }
         executeInstruction();
     }
 }
@@ -40,22 +55,33 @@ void Mos6502::powerOff() { powered = false; }
 
 bool Mos6502::powerStatus() { return powered; }
 
+void Mos6502::requestReset() { resetRequest = true; }
+
+void Mos6502::requestIRQ() { irqRequest = true; }
+
+void Mos6502::requestNMI() { nmiRequest = true; }
+
 void Mos6502::reset() {
     Word pch = readByte(0xFFFD) << 8;
     Word pcl = readByte(0xFFFC);
     pc = pch | pcl;
+    resetRequest = false;
+    irqRequest = false;
+    nmiRequest = false;
 }
 
 void Mos6502::irq() {
     Word pch = readByte(0xFFFF) << 8;
     Word pcl = readByte(0xFFFE);
     pc = pch | pcl;
+    irqRequest = false;
 }
 
 void Mos6502::nmi() {
     Word pch = readByte(0xFFFB) << 8;
     Word pcl = readByte(0xFFFA);
     pc = pch | pcl;
+    nmiRequest = false;
 }
 
 void Mos6502::registerSet(Register reg, Word value) {

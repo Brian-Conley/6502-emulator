@@ -20,9 +20,6 @@ bool Bus::registerDevice(std::shared_ptr<Device> device) {
     for (int i = startPage; i < (startPage + size); ++i)
         pageMap[i] = device;
 
-    // Register the bus to the device
-    device->setBus(this);
-
     return true;
 }
 
@@ -50,14 +47,6 @@ Byte Bus::read(Word address) {
     // Address does not map to anything, return a junk sentinel value.
     return 0xFF;
 }
-
-bool Bus::powerStatus() { return powered; }
-
-void Bus::setPower(bool status) { powered = status; }
-
-bool Bus::irqStatus() { return irq; }
-
-void Bus::setIRQ() { irq = true; }
 
 }
 

@@ -37,12 +37,12 @@ class Display : public Device {
         /**
          * @copydoc Device::read
          */
-        virtual Byte read(Byte page, Byte offset) override = 0;
+        Byte read(Byte page, Byte offset) override;
 
         /**
          * @copydoc Device::write
          */
-        virtual void write(Byte page, Byte offset, Byte value) override = 0;
+        void write(Byte page, Byte offset, Byte value) override;
 
         /*
          * @brief Convert the buffer into a Frame.

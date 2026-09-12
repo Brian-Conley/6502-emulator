@@ -1,6 +1,7 @@
 #include "memory.hpp"
 #include "device.hpp"
 #include <algorithm>
+#include <mutex>
 
 namespace Emulator {
 
@@ -16,11 +17,13 @@ Memory::Memory(Byte startPage, Byte size, bool isReadOnly, const std::vector<Byt
 }
 
 Byte Memory::read(Byte page, Byte offset) {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return m_memory[(localPage(page) << 8) | offset];
 }
 
 void Memory::write(Byte page, Byte offset, Byte value) {
     if (m_isReadOnly) return;
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_memory[(localPage(page) << 8) | offset] = value;
 }
 

@@ -3,16 +3,17 @@
 
 #include "bytes.hpp"
 #include <atomic>
+#include <functional>
+#include <mutex>
 
 namespace Emulator {
-
-class Bus;
 
 enum class DeviceType {
     RAM,
     ROM,
     DISPLAY_ASCII,
-    DISPLAY_PIXEL
+    DISPLAY_PIXEL,
+    SYSTEM_INTERFACE
 };
 
 /**
@@ -41,10 +42,14 @@ class Device {
         Byte startPage() const;      /**< First page occupied in the global address space. */
         Byte size() const;           /**< Number of pages allocated to the object. */
         DeviceType type() const;     /**< Category of the device. */
-        void setBus(Bus* systemBus); /**< Register the system bus to this device. */
+        bool powerStatus() const;    /**< Get the power status of the device. */
         virtual void powerOn();      /**< Turn the device on. */
         virtual void powerOff();     /**< Turn the device off. */
-        bool powerStatus() const;    /**< Get the power status of the device. */
+        void reset();                /**< Call the reset callback if bound. Reset referrs to triggering a processor reset in this case. */
+        void irq();                  /**< Call the IRQ callback if bound. */
+        void bindPowerOff(std::function<void()> callback); /**< Bind a callback function to powerOff. Devices execute the callback by default, but derived classes may have different implementations. */
+        void bindIRQ(std::function<void()> callback);      /**< Bind a callback function to irq(). */
+        void bindReset(std::function<void()> callback);    /**< Bind a callback function to reset(). */
 
         virtual ~Device() = default;
 
@@ -61,7 +66,11 @@ class Device {
         Byte localPage(Byte page) const;
 
         std::atomic<bool> m_powered; /**< Used to determine if a device's thread should continue execution. */
-        Bus* m_systemBus;            /**< Reference to the system bus for IRQ signals. */
+        std::mutex m_mutex;          /**< For thread safety. */
+
+        std::function<void()> m_powerOffCallback;
+        std::function<void()> m_resetCallback;
+        std::function<void()> m_irqCallback;
 };
 
 }

@@ -4,7 +4,6 @@
 #include "bytes.hpp"
 #include "device.hpp"
 #include <array>
-#include <atomic>
 #include <memory>
 
 namespace Emulator {
@@ -51,16 +50,8 @@ class Bus {
          */
         Byte read(Word address);
 
-        bool powerStatus();         /**< Get the power status of the bus. (primarily used to relay information to the processor)*/
-        void setPower(bool status); /**< Set the bus power status. */
-
-        bool irqStatus();           /**< Check if irq is set. (used by the processor) */
-        void setIRQ();              /**< Set irq to true. (used by devices) */
-
     private:
         std::array<std::shared_ptr<Device>, 256> pageMap{}; /**< The map of registered pages for each Device. */
-        std::atomic<bool> powered; /**< Is the bus turned on? */
-        bool irq; /**< Is a device requesting an interrupt? */
 };
 
 }

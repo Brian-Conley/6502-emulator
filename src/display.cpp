@@ -31,6 +31,16 @@ size_t Display::getRefreshRateInMs() {
     return 1000; /**< Should be unreachable. This is to satisfy a compiler warning regarding return values at the end of function. */
 }
 
+Byte Display::read(Byte page, Byte offset) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_buffer[(localPage(page) << 8) | offset];
+}
+
+void Display::write(Byte page, Byte offset, Byte value) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_buffer[(localPage(page) << 8) | offset] = value;
+}
+
 Display::Display(Byte startPage, Byte size, DeviceType type, size_t width, size_t height, RefreshRate refreshRate) :
     Device(startPage, size, type),
     m_width(width),

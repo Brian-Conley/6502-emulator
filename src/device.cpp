@@ -10,7 +10,7 @@ Device::Device(Byte startPage, Byte size, DeviceType type) :
         type
     },
     m_powered(false),
-    m_systemBus(nullptr)
+    m_mutex()
 {}
 
 Byte Device::startPage() const { return deviceConfig.startPage; }
@@ -29,12 +29,32 @@ Byte Device::localPage(Byte page) const {
     return page - deviceConfig.startPage;
 }
 
-void Device::setBus(Bus* systemBus) { m_systemBus = systemBus; }
+bool Device::powerStatus() const { return m_powered; }
 
 void Device::powerOn() { m_powered = true; }
 
-void Device::powerOff() { m_powered = false; }
+void Device::powerOff() {
+    if (!m_powered)
+        return;
+    m_powered = false;
+    if (m_powerOffCallback)
+        m_powerOffCallback();
+}
 
-bool Device::powerStatus() const { return m_powered; }
+void Device::reset() {
+    if (m_resetCallback)
+        m_resetCallback();
+}
+
+void Device::irq() {
+    if (m_irqCallback)
+        m_irqCallback();
+}
+
+void Device::bindPowerOff(std::function<void()> callback) { m_powerOffCallback = callback; }
+
+void Device::bindIRQ(std::function<void()> callback) { m_irqCallback = callback; }
+
+void Device::bindReset(std::function<void()> callback) { m_resetCallback = callback; }
 
 }

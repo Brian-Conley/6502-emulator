@@ -20,9 +20,12 @@ class Mos6502 {
         void powerOff(); /**< Clear powered flag. */
         bool powerStatus(); /**< Get powered flag. */
 
-        void reset();
-        void irq();
-        void nmi();
+        /** @Interrupr requests */
+        ///@{
+        void requestReset();
+        void requestIRQ();
+        void requestNMI();
+        ///@}
 
         /** @name Register Accessors (debug/testing only) */
         ///@{
@@ -168,6 +171,13 @@ class Mos6502 {
         void opTYA(AddressingMode mode);
         void opUnknown(AddressingMode mode);
         ///@}
+
+        void reset();
+        void irq();
+        void nmi();
+        std::atomic<bool> resetRequest;
+        std::atomic<bool> irqRequest;
+        std::atomic<bool> nmiRequest;
 
 };
 

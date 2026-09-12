@@ -28,16 +28,6 @@ class AsciiDisplay final : public Display {
          */
         AsciiDisplay(Byte startPage, Byte size, size_t width, size_t height, Display::RefreshRate refreshRate);
 
-        /**
-         * @copydoc Device::read
-         */
-        Byte read(Byte page, Byte offset) override;
-
-        /**
-         * @copydoc Device::write
-         */
-        void write(Byte page, Byte offset, Byte value) override;
-
         /*
          * @brief Convert the buffer into a Frame.
          */

@@ -8,14 +8,6 @@ PixelDisplay::PixelDisplay(Byte startPage, Byte size, size_t width, size_t heigh
     Display(startPage, size, DeviceType::DISPLAY_PIXEL, width, height, refreshRate)
 {}
 
-Byte PixelDisplay::read(Byte page, Byte offset) {
-    return m_buffer[(localPage(page) << 8) | offset];
-}
-
-void PixelDisplay::write(Byte page, Byte offset, Byte value) {
-    m_buffer[(localPage(page) << 8) | offset] = value;
-}
-
 Frame PixelDisplay::render() {
     for (size_t i = 0; i < std::min(m_buffer.size(), m_frameData.size()); ++i) {
         Byte buffVal = m_buffer[i];
@@ -68,7 +60,8 @@ Frame PixelDisplay::render() {
         m_frameData[i].glyph = glyph;
     }
 
-    if (m_systemBus) m_systemBus->setIRQ();
+    if (m_irqCallback)
+        m_irqCallback();
     return { m_width, m_height, m_frameData };
 }
 

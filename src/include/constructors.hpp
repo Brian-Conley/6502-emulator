@@ -4,6 +4,8 @@
 #include "bytes.hpp"
 #include "device.hpp"
 #include "display.hpp"
+#include "system_interface.hpp"
+#include <functional>
 #include <memory>
 
 namespace Emulator {
@@ -36,7 +38,6 @@ std::shared_ptr<Display> createAsciiDisplayDevice(
         size_t height,
         Display::RefreshRate refreshRate);
 
-
 /**
  * @brief Create a pixel Display object (for a terminal environment).
  *
@@ -52,6 +53,18 @@ std::shared_ptr<Display> createPixelDisplayDevice(
         size_t width,
         size_t height,
         Display::RefreshRate refreshRate);
+
+/**
+ * @brief Create a SystemInterface object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param powerOffCallback Function to handle powerOff() logic.
+ * @param resetCallback Function to handle reste() logic.
+ */
+std::shared_ptr<SystemInterface> createSystemInterfaceDevice(
+        Byte startPage,
+        std::function<void()> powerOffCallback,
+        std::function<void()> resetCallback);
 
 }}
 

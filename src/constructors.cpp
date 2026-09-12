@@ -35,4 +35,8 @@ std::shared_ptr<Display> createPixelDisplayDevice(
     return std::make_shared<PixelDisplay>(startPage, calculateDisplaySize(width, height), width, height, refreshRate);
 }
 
+std::shared_ptr<SystemInterface> createSystemInterfaceDevice(Byte startPage) {
+    return std::make_shared<SystemInterface>(startPage);
+}
+
 }}
