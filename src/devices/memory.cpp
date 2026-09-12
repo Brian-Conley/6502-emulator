@@ -1,5 +1,4 @@
-#include "memory.hpp"
-#include "device.hpp"
+#include "devices/memory.hpp"
 #include <algorithm>
 #include <mutex>
 

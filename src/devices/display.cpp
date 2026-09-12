@@ -1,5 +1,4 @@
-#include "display.hpp"
-#include "device.hpp"
+#include "devices/display.hpp"
 
 namespace Emulator {
 

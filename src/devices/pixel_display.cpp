@@ -1,6 +1,5 @@
-#include "pixel_display.hpp"
+#include "devices/pixel_display.hpp"
 #include "frame.hpp"
-#include "bus.hpp"
 
 namespace Emulator {
 

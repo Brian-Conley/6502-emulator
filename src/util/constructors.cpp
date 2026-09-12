@@ -1,7 +1,7 @@
-#include "constructors.hpp"
-#include "memory.hpp"
-#include "ascii_display.hpp"
-#include "pixel_display.hpp"
+#include "util/constructors.hpp"
+#include "devices/memory.hpp"
+#include "devices/ascii_display.hpp"
+#include "devices/pixel_display.hpp"
 
 namespace Emulator {
 namespace Constructors {

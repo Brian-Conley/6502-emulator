@@ -1,7 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "bytes.hpp"
-#include "device.hpp"
-#include "memory.hpp"
+#include "devices/memory.hpp"
 
 using namespace Emulator;
 

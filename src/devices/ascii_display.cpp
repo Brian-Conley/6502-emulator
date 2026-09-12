@@ -1,5 +1,4 @@
-#include "ascii_display.hpp"
-#include "bus.hpp"
+#include "devices/ascii_display.hpp"
 #include <algorithm>
 
 namespace Emulator {

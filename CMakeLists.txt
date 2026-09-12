@@ -11,16 +11,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ------------------------------
 
 add_library(mos6502_lib
-    src/bus.cpp
-    src/device.cpp
-    src/memory.cpp
     src/processor.cpp
+    src/bus.cpp
     src/frame.cpp
-    src/display.cpp
-    src/ascii_display.cpp
-    src/pixel_display.cpp
-    src/constructors.cpp
-    src/system_interface.cpp
+    src/util/constructors.cpp
+    src/devices/device.cpp
+    src/devices/memory.cpp
+    src/devices/system_interface.cpp
+    src/devices/display.cpp
+    src/devices/ascii_display.cpp
+    src/devices/pixel_display.cpp
 )
 
 target_include_directories(mos6502_lib PUBLIC

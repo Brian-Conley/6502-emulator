@@ -2,7 +2,7 @@
 #define BUS_HPP
 
 #include "bytes.hpp"
-#include "device.hpp"
+#include "devices/device.hpp"
 #include <array>
 #include <memory>
 

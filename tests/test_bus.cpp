@@ -3,7 +3,7 @@
 #include "bus.hpp"
 
 // Used for dummy devices to test page registering and read/write operations
-#include "memory.hpp"
+#include "devices/memory.hpp"
 
 using namespace Emulator;
 

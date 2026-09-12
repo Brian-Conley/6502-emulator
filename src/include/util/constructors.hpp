@@ -2,9 +2,9 @@
 #define CONSTRUCTORS_HPP
 
 #include "bytes.hpp"
-#include "device.hpp"
-#include "display.hpp"
-#include "system_interface.hpp"
+#include "devices/device.hpp"
+#include "devices/display.hpp"
+#include "devices/system_interface.hpp"
 #include <functional>
 #include <memory>
 
