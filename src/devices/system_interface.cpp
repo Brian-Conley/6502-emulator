@@ -9,8 +9,6 @@ SystemInterface::SystemInterface(Byte startPage) :
 Byte SystemInterface::read(Byte page, Byte offset) { return (page << 8) | offset; }
 
 void SystemInterface::write(Byte page, Byte offset, Byte value) {
-    if (!m_powered)
-        return;
     if (value == 0x00)
         return;
 

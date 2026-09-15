@@ -5,7 +5,7 @@
 #include "bytes.hpp"
 #include "instruction.hpp"
 #include <array>
-#include <atomic>
+#include <cstdint>
 #include <memory>
 
 namespace Emulator {
@@ -15,13 +15,10 @@ class Mos6502 {
         Mos6502(std::shared_ptr<Bus> SystemBus);
 
         void step(); /**< Execute one instruction. */
-        void run();  /**< Continuously execute instructions until termination. */
+        void powerOn();  /**< Full state reset. */
+        std::uint64_t getCumulativeCycles() const; /**< Public accessor to get the cumulative cycles. */
 
-        void powerOn();  /**< Set powered flag. */
-        void powerOff(); /**< Clear powered flag. */
-        bool powerStatus(); /**< Get powered flag. */
-
-        /** @Interrupr requests */
+        /** @Interrupt requests */
         ///@{
         void requestReset();
         void requestIRQ();
@@ -38,10 +35,9 @@ class Mos6502 {
     private:
         Mos6502() = delete;
 
-        unsigned int CumulativeCycles; /**< Used for controlling the run speed. */
+        std::uint64_t CumulativeCycles; /**< Used for controlling the run speed. */
         std::shared_ptr<Bus> SystemBus; /**< Handles memory reads/writes for memory and devices. */
         const std::array<Instruction, 256> opcodeTable; /**< Lookup table for instructions. */
-        std::atomic<bool> powered; /**< Determine if instructions should be running. */
 
         /** @name Registers */
         ///@{
@@ -176,9 +172,9 @@ class Mos6502 {
         void reset();
         void irq();
         void nmi();
-        std::atomic<bool> resetRequest;
-        std::atomic<bool> irqRequest;
-        std::atomic<bool> nmiRequest;
+        bool resetRequest;
+        bool irqRequest;
+        bool nmiRequest;
 
 };
 

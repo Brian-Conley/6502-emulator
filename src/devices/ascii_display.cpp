@@ -13,9 +13,6 @@ Frame AsciiDisplay::render() {
         m_frameData[i].glyph = (g >= 0x20 && g < 0x7F) ? g : 0x20;
     }
 
-    // Trigger the interrupt routine to prepare the next frame.
-    if (m_irqCallback)
-        m_irqCallback();
     return { m_width, m_height, m_frameData };
 }
 

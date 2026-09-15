@@ -31,12 +31,10 @@ size_t Display::getRefreshRateInMs() {
 }
 
 Byte Display::read(Byte page, Byte offset) {
-    std::lock_guard<std::mutex> lock(m_mutex);
     return m_buffer[(localPage(page) << 8) | offset];
 }
 
 void Display::write(Byte page, Byte offset, Byte value) {
-    std::lock_guard<std::mutex> lock(m_mutex);
     m_buffer[(localPage(page) << 8) | offset] = value;
 }
 

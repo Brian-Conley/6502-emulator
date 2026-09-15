@@ -59,8 +59,6 @@ Frame PixelDisplay::render() {
         m_frameData[i].glyph = glyph;
     }
 
-    if (m_irqCallback)
-        m_irqCallback();
     return { m_width, m_height, m_frameData };
 }
 

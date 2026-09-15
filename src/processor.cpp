@@ -8,7 +8,6 @@ Mos6502::Mos6502(std::shared_ptr<Bus> SystemBus):
     CumulativeCycles(0),
     SystemBus(SystemBus),
     opcodeTable(initializeOpcodeTable()),
-    powered(false),
     pc(0xFFFC),
     sp(0xFF),
     sr(0b00100000),
@@ -22,27 +21,20 @@ Mos6502::Mos6502(std::shared_ptr<Bus> SystemBus):
 
 void Mos6502::step() {
     executeInstruction();
-}
-void Mos6502::run() {
-    while (powered) {
-        if (resetRequest) {
-            reset();
-            continue;
-        }
-        if (irqRequest) {
+    if (resetRequest) {
+        reset();
+    }
+    if (irqRequest) {
+        if (!getFlag(Flags::I))
             irq();
-            continue;
-        }
-        if (nmiRequest) {
-            nmi();
-            continue;
-        }
-        executeInstruction();
+    }
+    if (nmiRequest) {
+        nmi();
     }
 }
 
 void Mos6502::powerOn() {
-    powered = true;
+    reset();
     CumulativeCycles = 0;
     sp = 0xFF;
     sr = 0b00100000;
@@ -51,13 +43,14 @@ void Mos6502::powerOn() {
     y = 0x00;
 }
 
-void Mos6502::powerOff() { powered = false; }
-
-bool Mos6502::powerStatus() { return powered; }
+std::uint64_t Mos6502::getCumulativeCycles() const { return CumulativeCycles; }
 
 void Mos6502::requestReset() { resetRequest = true; }
 
-void Mos6502::requestIRQ() { irqRequest = true; }
+void Mos6502::requestIRQ() {
+    if (!getFlag(Flags::I))
+        irqRequest = true;
+}
 
 void Mos6502::requestNMI() { nmiRequest = true; }
 
@@ -71,6 +64,10 @@ void Mos6502::reset() {
 }
 
 void Mos6502::irq() {
+    stackPush(pc >> 8);
+    stackPush(pc & 0xFF);
+    stackPush(sr);
+    setFlag(Flags::I, true);
     Word pch = readByte(0xFFFF) << 8;
     Word pcl = readByte(0xFFFE);
     pc = pch | pcl;
@@ -78,6 +75,9 @@ void Mos6502::irq() {
 }
 
 void Mos6502::nmi() {
+    stackPush(pc >> 8);
+    stackPush(pc & 0xFF);
+    stackPush(sr);
     Word pch = readByte(0xFFFB) << 8;
     Word pcl = readByte(0xFFFA);
     pc = pch | pcl;
@@ -576,11 +576,15 @@ void Mos6502::opINC(AddressingMode mode) {
 void Mos6502::opINX(AddressingMode mode) {
     if (mode != AddressingMode::Implied) return;
     ++x;
+    setNegativeFromValue(x);
+    setZeroFromValue(x);
 }
 
 void Mos6502::opINY(AddressingMode mode) {
     if (mode != AddressingMode::Implied) return;
     ++y;
+    setNegativeFromValue(y);
+    setZeroFromValue(y);
 }
 
 void Mos6502::opJMP(AddressingMode mode) {

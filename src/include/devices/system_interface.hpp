@@ -3,7 +3,6 @@
 
 #include "bytes.hpp"
 #include "device.hpp"
-#include <functional>
 
 namespace Emulator {
 

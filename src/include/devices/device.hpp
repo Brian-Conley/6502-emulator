@@ -2,9 +2,7 @@
 #define DEVICE_HPP
 
 #include "bytes.hpp"
-#include <atomic>
 #include <functional>
-#include <mutex>
 
 namespace Emulator {
 
@@ -42,9 +40,7 @@ class Device {
         Byte startPage() const;      /**< First page occupied in the global address space. */
         Byte size() const;           /**< Number of pages allocated to the object. */
         DeviceType type() const;     /**< Category of the device. */
-        bool powerStatus() const;    /**< Get the power status of the device. */
-        virtual void powerOn();      /**< Turn the device on. */
-        virtual void powerOff();     /**< Turn the device off. */
+        void powerOff();             /**< Call the powerOff callback if bound. */
         void reset();                /**< Call the reset callback if bound. Reset referrs to triggering a processor reset in this case. */
         void irq();                  /**< Call the IRQ callback if bound. */
         void bindPowerOff(std::function<void()> callback); /**< Bind a callback function to powerOff. Devices execute the callback by default, but derived classes may have different implementations. */
@@ -64,9 +60,6 @@ class Device {
         Device(Byte startPage, Byte size, DeviceType type);
         const DeviceConfig deviceConfig;
         Byte localPage(Byte page) const;
-
-        std::atomic<bool> m_powered; /**< Used to determine if a device's thread should continue execution. */
-        std::mutex m_mutex;          /**< For thread safety. */
 
         std::function<void()> m_powerOffCallback;
         std::function<void()> m_resetCallback;

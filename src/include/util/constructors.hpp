@@ -61,10 +61,7 @@ std::shared_ptr<Display> createPixelDisplayDevice(
  * @param powerOffCallback Function to handle powerOff() logic.
  * @param resetCallback Function to handle reste() logic.
  */
-std::shared_ptr<SystemInterface> createSystemInterfaceDevice(
-        Byte startPage,
-        std::function<void()> powerOffCallback,
-        std::function<void()> resetCallback);
+std::shared_ptr<SystemInterface> createSystemInterfaceDevice(Byte startPage);
 
 }}
 

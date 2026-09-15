@@ -8,9 +8,7 @@ Device::Device(Byte startPage, Byte size, DeviceType type) :
         static_cast<Byte>(startPage + size - 1),
         size,
         type
-    },
-    m_powered(false),
-    m_mutex()
+    }
 {}
 
 Byte Device::startPage() const { return deviceConfig.startPage; }
@@ -29,14 +27,7 @@ Byte Device::localPage(Byte page) const {
     return page - deviceConfig.startPage;
 }
 
-bool Device::powerStatus() const { return m_powered; }
-
-void Device::powerOn() { m_powered = true; }
-
 void Device::powerOff() {
-    if (!m_powered)
-        return;
-    m_powered = false;
     if (m_powerOffCallback)
         m_powerOffCallback();
 }
