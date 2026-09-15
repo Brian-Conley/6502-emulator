@@ -39,7 +39,7 @@ void System::run(std::ostream& os) {
 
     using clock = std::chrono::steady_clock;
 
-    const auto frame_interval = std::chrono::milliseconds(display->getRefreshRateInMs());
+    const auto frame_interval = std::chrono::milliseconds(display ? display->getRefreshRateInMs() : 1000);
     auto next_frame = clock::now() + frame_interval;
     const uint64_t cycles_per_frame = 1000000 * display->getRefreshRateInMs() / 1000;
     uint64_t expected_cycles = cycles_per_frame;
@@ -49,8 +49,9 @@ void System::run(std::ostream& os) {
         while (processor->getCumulativeCycles() < expected_cycles) {
             processor->step();
         }
-        processor->requestIRQ();
-        display->render().draw(os);
+
+        if (display)
+            display->render().draw(os);
 
         if (clock::now() < next_frame) {
             std::this_thread::sleep_until(next_frame);
