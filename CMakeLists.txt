@@ -18,6 +18,7 @@ add_library(mos6502_lib
     src/util/constructors.cpp
     src/devices/device.cpp
     src/devices/memory.cpp
+    src/devices/memory_bank.cpp
     src/devices/system_interface.cpp
     src/devices/display.cpp
     src/devices/ascii_display.cpp

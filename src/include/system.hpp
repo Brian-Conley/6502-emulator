@@ -3,6 +3,7 @@
 
 #include "devices/device.hpp"
 #include "devices/display.hpp"
+#include "bus.hpp"
 #include "processor.hpp"
 #include <atomic>
 #include <memory>
@@ -26,8 +27,8 @@ class System {
 
         std::atomic<bool> powered;
 
-        std::shared_ptr<Bus> bus;
-        std::shared_ptr<Mos6502> processor;
+        Bus bus;
+        Mos6502 processor;
         std::shared_ptr<Display> display;
         std::vector<std::shared_ptr<Device>> deviceList;
 };

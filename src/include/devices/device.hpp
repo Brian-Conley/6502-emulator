@@ -11,7 +11,8 @@ enum class DeviceType {
     ROM,
     DISPLAY_ASCII,
     DISPLAY_PIXEL,
-    SYSTEM_INTERFACE
+    SYSTEM_INTERFACE,
+    MEMORY_BANK
 };
 
 /**

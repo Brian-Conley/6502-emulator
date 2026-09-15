@@ -4,9 +4,10 @@
 
 namespace Emulator {
 
-Mos6502::Mos6502(std::shared_ptr<Bus> SystemBus):
+Mos6502::Mos6502(std::function<Byte(Word)> readCallback, std::function<void(Word, Byte)> writeCallback) :
     CumulativeCycles(0),
-    SystemBus(SystemBus),
+    readCallback(readCallback),
+    writeCallback(writeCallback),
     opcodeTable(initializeOpcodeTable()),
     pc(0xFFFC),
     sp(0xFF),
@@ -142,28 +143,20 @@ Byte Mos6502::stackPull() {
 }
 
 Byte Mos6502::readByte(Word address) {
-    if (!SystemBus)
-        return Bus::BUS_BAD_READ_SENTINEL_VALUE;
-    return SystemBus->read(address);
+    return readCallback(address);
 }
 
 void Mos6502::writeByte(Word address, Byte value) {
-    if (!SystemBus)
-        return;
-    SystemBus->write(address, value);
+    writeCallback(address, value);
 }
 
 Word Mos6502::readWord(Word addressLow) {
-    if (!SystemBus)
-        return Bus::BUS_BAD_READ_SENTINEL_VALUE;
-    return (SystemBus->read(addressLow) << 8) + SystemBus->read(addressLow + 1);
+    return (readCallback(addressLow) << 8) + readCallback(addressLow + 1);
 }
 
 void Mos6502::writeWord(Word addressLow, Word value) {
-    if (!SystemBus)
-        return;
-    SystemBus->write(addressLow, value & 0xFF);
-    SystemBus->write(addressLow + 1, value >> 8);
+    writeCallback(addressLow, value & 0xFF);
+    writeCallback(addressLow + 1, value >> 8);
 }
 
 void Mos6502::executeInstruction() {

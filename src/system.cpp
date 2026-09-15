@@ -1,4 +1,5 @@
 #include "system.hpp"
+#include "bus.hpp"
 #include "devices/device.hpp"
 #include "processor.hpp"
 #include <functional>
@@ -7,19 +8,19 @@
 namespace Emulator {
 
 System::System(std::vector<std::shared_ptr<Device>> deviceList, std::shared_ptr<Display> display) :
-    bus(std::make_shared<Bus>()),
-    processor(std::make_shared<Mos6502>(bus)),
+    bus(),
+    processor( std::bind(&Bus::read, &bus, std::placeholders::_1), std::bind(&Bus::write, &bus, std::placeholders::_1, std::placeholders::_2) ),
     display(display),
     deviceList(deviceList) {
 
     if (display) {
-        display->bindIRQ(std::bind(&Mos6502::requestIRQ, processor.get()));
+        display->bindIRQ(std::bind(&Mos6502::requestIRQ, &processor));
     }
 
     for (auto d : deviceList) {
-        bus->registerDevice(d);
+        bus.registerDevice(d);
         if (d->type() == DeviceType::SYSTEM_INTERFACE) {
-            d->bindReset(std::bind(&Mos6502::requestReset, processor.get()));
+            d->bindReset(std::bind(&Mos6502::requestReset, &processor));
             d->bindPowerOff(std::bind(&System::powerOff, this));
         }
     }
@@ -29,7 +30,7 @@ bool System::powerStatus() { return powered; }
 
 void System::powerOn() {
     powered = true;
-    processor->powerOn();
+    processor.powerOn();
 }
 
 void System::powerOff() { powered = false; }
@@ -46,8 +47,8 @@ void System::run(std::ostream& os) {
 
     os << "\033[2J\033[1;1H";
     while (powered) {
-        while (processor->getCumulativeCycles() < expected_cycles) {
-            processor->step();
+        while (processor.getCumulativeCycles() < expected_cycles) {
+            processor.step();
         }
 
         if (display)

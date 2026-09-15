@@ -1,18 +1,17 @@
 #ifndef PROCESSOR_HPP
 #define PROCESSOR_HPP
 
-#include "bus.hpp"
 #include "bytes.hpp"
 #include "instruction.hpp"
 #include <array>
 #include <cstdint>
-#include <memory>
+#include "functional"
 
 namespace Emulator {
 
 class Mos6502 {
     public:
-        Mos6502(std::shared_ptr<Bus> SystemBus);
+        Mos6502(std::function<Byte(Word)> readCallback, std::function<void(Word, Byte)> writeCallback);
 
         void step(); /**< Execute one instruction. */
         void powerOn();  /**< Full state reset. */
@@ -36,7 +35,8 @@ class Mos6502 {
         Mos6502() = delete;
 
         std::uint64_t CumulativeCycles; /**< Used for controlling the run speed. */
-        std::shared_ptr<Bus> SystemBus; /**< Handles memory reads/writes for memory and devices. */
+        std::function<Byte(Word)> readCallback; /**< Interface for reading from the address space. */
+        std::function<void(Word, Byte)> writeCallback; /**< Interface for writing to the address space. */
         const std::array<Instruction, 256> opcodeTable; /**< Lookup table for instructions. */
 
         /** @name Registers */
