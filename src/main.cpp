@@ -26,7 +26,7 @@ std::vector<Byte> loadProgram(const std::string& filepath) {
 
 int main() {
     std::vector<std::shared_ptr<Device>> deviceList;
-    std::shared_ptr<Display> display = Constructors::createPixelDisplayDevice(0x40, 16, 16, Display::RefreshRate::ONE);
+    std::shared_ptr<Display> display = Constructors::createPixelDisplayDevice(0x40, 48, 16, Display::RefreshRate::EIGHT);
 
     auto initData = loadProgram("program.bin");
 
@@ -34,7 +34,7 @@ int main() {
     // Zpg and stack
     deviceList.push_back(Constructors::createMemoryDevice(0x00, 0x2));
     // System interface
-    deviceList.push_back(Constructors::createSystemInterfaceDevice(0x41));
+    deviceList.push_back(Constructors::createSystemInterfaceDevice(0x43));
     // Program ROM
     // rom starts at $8000, ends $FFFF (128 pages)
     deviceList.push_back(Constructors::createMemoryDevice(0x80, 0x80, true, initData));

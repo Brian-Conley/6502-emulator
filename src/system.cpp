@@ -3,7 +3,6 @@
 #include "processor.hpp"
 #include <functional>
 #include <thread>
-#include <iomanip>
 
 namespace Emulator {
 
@@ -59,17 +58,6 @@ void System::run(std::ostream& os) {
 
         next_frame += frame_interval;
         expected_cycles += cycles_per_frame;
-    }
-
-    for (int row = 0; row < 16; ++row) {
-        for (int col = 0; col < 16; ++col) {
-            os  << std::hex
-                << std::setw(2)
-                << std::setfill('0')
-                << static_cast<unsigned>(bus->read(0x4000 + (row*16 + col)))
-                << ' ';
-        }
-        os << '\n';
     }
 }
 

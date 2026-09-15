@@ -20,17 +20,15 @@ Mos6502::Mos6502(std::shared_ptr<Bus> SystemBus):
 {}
 
 void Mos6502::step() {
-    executeInstruction();
     if (resetRequest) {
         reset();
-    }
-    if (irqRequest) {
+    } else if (nmiRequest) {
+        nmi();
+    } else if (irqRequest) {
         if (!getFlag(Flags::I))
             irq();
     }
-    if (nmiRequest) {
-        nmi();
-    }
+    executeInstruction();
 }
 
 void Mos6502::powerOn() {
@@ -41,6 +39,7 @@ void Mos6502::powerOn() {
     a = 0x00;
     x = 0x00;
     y = 0x00;
+    setFlag(Flags::I, false);
 }
 
 std::uint64_t Mos6502::getCumulativeCycles() const { return CumulativeCycles; }
@@ -48,8 +47,7 @@ std::uint64_t Mos6502::getCumulativeCycles() const { return CumulativeCycles; }
 void Mos6502::requestReset() { resetRequest = true; }
 
 void Mos6502::requestIRQ() {
-    if (!getFlag(Flags::I))
-        irqRequest = true;
+    irqRequest = true;
 }
 
 void Mos6502::requestNMI() { nmiRequest = true; }
@@ -61,6 +59,7 @@ void Mos6502::reset() {
     resetRequest = false;
     irqRequest = false;
     nmiRequest = false;
+    setFlag(Flags::I, true);
 }
 
 void Mos6502::irq() {
@@ -133,14 +132,13 @@ void Mos6502::setNegativeFromValue(Byte value) {
 }
 
 void Mos6502::stackPush(Byte value) {
-    writeByte(sp, value);
+    writeByte(0x100 | sp, value);
     --sp;
 }
 
 Byte Mos6502::stackPull() {
-    auto value = readByte(sp);
     ++sp;
-    return value;
+    return readByte(0x100 | sp);
 }
 
 Byte Mos6502::readByte(Word address) {
@@ -164,8 +162,8 @@ Word Mos6502::readWord(Word addressLow) {
 void Mos6502::writeWord(Word addressLow, Word value) {
     if (!SystemBus)
         return;
-    SystemBus->write(addressLow, value >> 8);
-    SystemBus->write(addressLow + 1, (value >> 8) & 0xFF);
+    SystemBus->write(addressLow, value & 0xFF);
+    SystemBus->write(addressLow + 1, value >> 8);
 }
 
 void Mos6502::executeInstruction() {
@@ -451,10 +449,10 @@ void Mos6502::opBRK(AddressingMode mode) {
     if (mode != AddressingMode::Implied) return;
     ++pc;
     stackPush(pc >> 8);
-    stackPush(pc & 0xFF);
-    stackPush(sr | 0b00010000);
+    stackPush(pc * 0xFF);
+    stackPush(sr | 0b00110000);
     setFlag(Flags::I, true);
-    irq();
+    pc = readByte(0xFFFE | (readByte(0xFFFF) << 8));
 }
 
 void Mos6502::opBVC(AddressingMode mode) {
@@ -480,22 +478,22 @@ void Mos6502::opBVS(AddressingMode mode) {
 }
 
 void Mos6502::opCLC(AddressingMode mode) {
-    if (mode != AddressingMode::Implied)
+    if (mode == AddressingMode::Implied)
         setFlag(Flags::C, false);
 }
 
 void Mos6502::opCLD(AddressingMode mode) {
-    if (mode != AddressingMode::Implied)
+    if (mode == AddressingMode::Implied)
         setFlag(Flags::D, false);
 }
 
 void Mos6502::opCLI(AddressingMode mode) {
-    if (mode != AddressingMode::Implied)
+    if (mode == AddressingMode::Implied)
         setFlag(Flags::I, false);
 }
 
 void Mos6502::opCLV(AddressingMode mode) {
-    if (mode != AddressingMode::Implied)
+    if (mode == AddressingMode::Implied)
         setFlag(Flags::V, false);
 }
 
@@ -595,7 +593,7 @@ void Mos6502::opJMP(AddressingMode mode) {
 }
 
 void Mos6502::opJSR(AddressingMode mode) {
-    Word stackAddr = pc + 2;
+    Word stackAddr = pc + 1;
     stackPush((stackAddr >> 8) & 0xFF);
     stackPush(stackAddr & 0xFF);
     auto addr = resolveAddress(mode);
