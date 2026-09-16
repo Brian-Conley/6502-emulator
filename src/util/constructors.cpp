@@ -1,6 +1,7 @@
 #include "util/constructors.hpp"
 #include "devices/memory.hpp"
 #include "devices/ascii_display.hpp"
+#include "devices/memory_bank.hpp"
 #include "devices/pixel_display.hpp"
 
 namespace Emulator {
@@ -13,8 +14,36 @@ namespace {
     }
 }
 
-std::shared_ptr<Device> createMemoryDevice(Byte startPage, Byte size, bool readOnly, const std::vector<Byte>& initData) {
-    return std::make_shared<Memory>(startPage, size, readOnly, initData);
+std::shared_ptr<Device> createRomDevice(Byte startPage, Byte size, const std::vector<Byte>& initData) {
+    return std::make_shared<Memory>(startPage, size, true, initData);
+}
+
+std::shared_ptr<Device> createRamDevice(Byte startPage, Byte size, const std::vector<Byte>& initData) {
+    return std::make_shared<Memory>(startPage, size, false, initData);
+}
+
+std::shared_ptr<Device> create16BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b16, true, initData);
+}
+
+std::shared_ptr<Device> create24BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b24, true, initData);
+}
+
+std::shared_ptr<Device> create32BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b32, true, initData);
+}
+
+std::shared_ptr<Device> create16BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b16, false, initData);
+}
+
+std::shared_ptr<Device> create24BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b24, false, initData);
+}
+
+std::shared_ptr<Device> create32BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData) {
+    return std::make_shared<MemoryBank>(startPage, MemoryBank::BankSize::b32, false, initData);
 }
 
 std::shared_ptr<Display> createAsciiDisplayDevice(

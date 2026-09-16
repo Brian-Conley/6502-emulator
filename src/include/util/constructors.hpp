@@ -12,15 +12,86 @@ namespace Emulator {
 namespace Constructors {
 
 /**
- * @brief Create a Memory object.
+ * @brief Create a ROM object.
  *
  * @param startPage The starting page in the global address space.
  * @param size The total number of pages to allocate.
- * @param readOnly True for ROM, false for RAM.
+ * @param initData Initialize the contents to this data
  *
  * @return Device smart pointer of the created object.
  */
-std::shared_ptr<Device> createMemoryDevice(Byte startPage, Byte size, bool readOnly = false, const std::vector<Byte>& initData = {});
+std::shared_ptr<Device> createRomDevice(Byte startPage, Byte size, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a RAM object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param size The total number of pages to allocate.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> createRamDevice(Byte startPage, Byte size, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 16-Bit ROM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create16BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 24-Bit ROM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create24BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 32-Bit ROM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create32BitRomBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 16-Bit RAM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create16BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 24-Bit RAM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create24BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
+
+/**
+ * @brief Create a 32-Bit ROM Bank object.
+ *
+ * @param startPage The starting page in the global address space.
+ * @param initData Initialize the contents to this data
+ *
+ * @return Device smart pointer of the created object.
+ */
+std::shared_ptr<Device> create32BitRamBankDevice(Byte startPage, const std::vector<Byte>& initData = {});
 
 /**
  * @brief Create an ascii Display object (for a terminal environment).

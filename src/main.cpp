@@ -32,12 +32,12 @@ int main() {
 
     deviceList.push_back(display);
     // Zpg and stack
-    deviceList.push_back(Constructors::createMemoryDevice(0x00, 0x2));
+    deviceList.push_back(Constructors::createRamDevice(0x00, 0x2));
     // System interface
     deviceList.push_back(Constructors::createSystemInterfaceDevice(0x43));
     // Program ROM
     // rom starts at $8000, ends $FFFF (128 pages)
-    deviceList.push_back(Constructors::createMemoryDevice(0x80, 0x80, true, initData));
+    deviceList.push_back(Constructors::createRomDevice(0x80, 0x80, initData));
 
     System sys(deviceList, display);
     sys.powerOn();
