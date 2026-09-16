@@ -15,7 +15,7 @@ add_library(mos6502_lib
     src/bus.cpp
     src/system.cpp
     src/frame.cpp
-    src/util/constructors.cpp
+    src/devices/device_factories.cpp
     src/devices/device.cpp
     src/devices/memory.cpp
     src/devices/memory_bank.cpp

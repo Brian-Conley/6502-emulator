@@ -1,11 +1,11 @@
-#include "util/constructors.hpp"
+#include "devices/device_factories.hpp"
 #include "devices/memory.hpp"
 #include "devices/ascii_display.hpp"
 #include "devices/memory_bank.hpp"
 #include "devices/pixel_display.hpp"
 
 namespace Emulator {
-namespace Constructors {
+namespace DeviceFactory {
 
 namespace {
     Byte calculateDisplaySize(size_t width, size_t height) {

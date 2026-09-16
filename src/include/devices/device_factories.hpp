@@ -1,5 +1,5 @@
-#ifndef CONSTRUCTORS_HPP
-#define CONSTRUCTORS_HPP
+#ifndef DEVICE_FACTORIES_HPP
+#define DEVICE_FACTORIES_HPP
 
 #include "bytes.hpp"
 #include "devices/device.hpp"
@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace Emulator {
-namespace Constructors {
+namespace DeviceFactory {
 
 /**
  * @brief Create a ROM object.
