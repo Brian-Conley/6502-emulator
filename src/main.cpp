@@ -24,17 +24,23 @@ std::vector<Byte> loadProgram(const std::string& filepath) {
     throw std::runtime_error("Failed to read binary file: " + filepath);
 }
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <program.bin>\n";
+        return 1;
+    }
     std::vector<std::shared_ptr<Device>> deviceList;
-    std::shared_ptr<Display> display = DeviceFactory::createPixelDisplayDevice(0x40, 48, 16, Display::RefreshRate::TWENTY);
+    std::shared_ptr<Display> display = DeviceFactory::createPixelDisplayDevice(0x03, 16, 16, Display::RefreshRate::EIGHT);
 
-    auto initData = loadProgram("program.bin");
+    auto initData = loadProgram(argv[1]);
 
     deviceList.push_back(display);
     // Zpg and stack
     deviceList.push_back(DeviceFactory::createRamDevice(0x00, 0x2));
     // System interface
-    deviceList.push_back(DeviceFactory::createSystemInterfaceDevice(0x43));
+    deviceList.push_back(DeviceFactory::createSystemInterfaceDevice(0x02));
+    // Main RAM
+    deviceList.push_back(DeviceFactory::createRamDevice(0x7E, 0x02));
     // Program ROM
     // rom starts at $8000, ends $FFFF (128 pages)
     deviceList.push_back(DeviceFactory::createRomDevice(0x80, 0x80, initData));

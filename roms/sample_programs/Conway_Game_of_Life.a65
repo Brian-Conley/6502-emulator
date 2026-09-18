@@ -1,0 +1,282 @@
+; Conway's Game of Life
+; ( with wrapping board logic )
+;
+; System Config
+;
+; | Device           Address Range | StartPage, Pages |
+; | ------------------------------------------------- |
+; | RAM              $0000 - $01FF |      0x00, 0x02  |
+; | SystemInterface  $0200 - $02FF |      0x02, 0x01  |
+; | PixelDisplay     $0300 - $03FF |      0x03, 0x01  |
+; | RAM              $7E00 - $7FFF |      0x7E, 0x02  |
+; | ROM              $8000 - $FFFF |      0x80, 0x7F  |
+
+    ; Device registers
+    .equ SYSTEM_SHUTDOWN            $0200 ; Write a non-zero value here to shut down the system
+    .equ SYSTEM_RESET               $0201 ; Write a non-zero value here to reset the system
+    .equ display_page               $0300 ; 256-byte buffer for display data
+    ; Main memory
+    .equ flag_done_running          $0000 ; Flag to determine if the program should terminate
+    .equ generation_count           $0001 ; Number of generations calculated. Program is terminated at 0xFF
+    .equ cell_grid_page             $7E00 ; State of each cell
+    .equ cell_neighbor_count_page   $7F00 ; Number of alive neighbors each cell has
+
+    .org $8000
+init:
+    SEI
+    LDA #$00
+    TAX
+    STA flag_done_running           ; Set termination flag to false
+    STA generation_count            ; Set generation count to 0x00
+cellgridinitloop:
+    STA cell_grid_page,X            ; Set all cell states to dead
+    STA cell_neighbor_count_page,X  ; Set all cell neighbor counts to zero
+    INX
+    BNE cellgridinitloop
+cellgridinitpattern:
+    LDA #%00101001
+    LDX #37
+    STA cell_grid_page,X
+    LDX #38
+    STA cell_grid_page,X
+    LDX #39
+    STA cell_grid_page,X
+    LDX #24
+    STA cell_grid_page,X
+    LDX #5
+    STA cell_grid_page,X
+initcomplete:
+    CLI
+    JMP mainloop
+
+mainloop:
+    LDA flag_done_running
+    BEQ mainloop                    ; If flag_done_running is false, continue looping, waiting for interrupts
+    JMP terminate                   ; If flag_done_running is true, terminate the program
+
+terminate:
+    LDA #$01
+    STA SYSTEM_SHUTDOWN
+
+; Routine: Calculate the number of alive neighbors each cell has, used for finding the next generation's layout
+calculate_next_generation:
+    LDA #$00
+    LDX #$00                        ; Absolute cell index
+    LDY #$00                        ; Local row offset
+
+cng_reset_count_loop:
+    STA cell_neighbor_count_page,X
+    INX
+    BNE cng_reset_count_loop
+    ; Fall through to loop with X == 0x00
+
+cngloop:
+    TYA
+    PHA                             ; Push the local row offset to the stack
+    TXA                             ; Copy the cell index to A
+    SEC                             ; Set carry flag for correct SBC logic
+    SBC #$10                        ; Point A to the row above
+    TAY
+    JSR cng_inc_neighbor
+cng_upper_center_not_set:
+    TXA                             ; Copy the cell index to A
+    CLC                             ; Clear carry flag for correct ADC logic
+    ADC #$10                        ; Point to the row below
+    TAY
+    JSR cng_inc_neighbor
+
+cng_check_upper_left:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    BEQ cng_cul_is_left_edge        ; If local row offset == 0, use different logic to find the upper-left neighbor
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$11                        ; Subtract 17, index now points to the upper-left neighbor
+    JMP cng_cul_inc
+cng_cul_is_left_edge:
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$01                        ; Subtract 1, index now points to the upper-left neighbor
+cng_cul_inc:
+    TAY                             ; Copy upper-left index to Y
+    JSR cng_inc_neighbor
+
+cng_check_center_left:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    BEQ cng_ccl_is_left_edge        ; If local row offset == 0, use different logic to find the left cell
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$01                        ; Subtract 1, index now points to the left neighbor
+    JMP cng_ccl_inc
+cng_ccl_is_left_edge:
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$0F                        ; Add 15, index now points to the left neighbor
+cng_ccl_inc:
+    TAY                             ; Copy center-left index to Y
+    JSR cng_inc_neighbor
+
+cng_check_lower_left:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    BEQ cng_cll_is_left_edge        ; If local row offset == 0, use different logic to find the left cell
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$0F                        ; Add 15, index now points to the lower-left neighbor
+    JMP cng_cll_inc
+cng_cll_is_left_edge:
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$1F                        ; Add 31, index now points to the lower-left neighbor
+cng_cll_inc:
+    TAY                             ; Copy lower-left index to Y
+    JSR cng_inc_neighbor
+
+cng_check_upper_right:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    CMP #$0F
+    BEQ cng_cur_is_right_edge       ; If local row offset == 15, use different logic to find the right cell
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$0F                        ; Subtract 15, index now points to the upper-right neighbor
+    JMP cng_cur_inc
+cng_cur_is_right_edge:
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$1F                        ; Subtract 31, index now points to the upper-right neighbor
+cng_cur_inc:
+    TAY                             ; Copy upper-right index to Y
+    JSR cng_inc_neighbor
+
+cng_check_center_right:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    CMP #$0F
+    BEQ cng_ccr_is_right_edge       ; If local row offset == 0, use different logic to find the right cell
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$01                        ; Add 1, index now points to the center-right neighbor
+    JMP cng_ccr_inc
+cng_ccr_is_right_edge:
+    SEC                             ; Set the carry flag for correct SBC logic
+    TXA                             ; Copy the cell index to A
+    SBC #$0F                        ; Subtract 15, index now points to the center-right neighbor
+cng_ccr_inc:
+    TAY                             ; Copy center-right index to Y
+    JSR cng_inc_neighbor
+
+cng_check_lower_right:
+    PLA                             ; Pull the local row offset from the stack
+    PHA                             ; Push the local row offset to the stack
+    CMP #$0F
+    BEQ cng_clr_is_right_edge       ; If local row offset == 0, use different logic to find the right cell
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$11                        ; Add 17, index now points to the lower-right neighbor
+    JMP cng_clr_inc
+cng_clr_is_right_edge:
+    CLC                             ; Clear the carry flag for correct ADC logic
+    TXA                             ; Copy the cell index to A
+    ADC #$01                        ; Add 1, index now points to the lower-right neighbor
+cng_clr_inc:
+    TAY                             ; Copy lower-right index to Y
+    JSR cng_inc_neighbor
+
+cng_iteration_end:
+    PLA
+    TAY                             ; Pull the local row offset from the stack
+    INX                             ; INC index to next cell
+    BEQ cngreturn                   ; If X == 0x00, end the routine
+    INY                             ; INC local row offset
+    CPY #$10
+    BNE cng_goto_next_iter          ; If local row offset != 0x10, go to next iteration
+    LDY #$00                        ; Reset local row offset
+cng_goto_next_iter:
+    JMP cngloop                     ; Go to next iteration
+cngreturn:
+    RTS
+
+; Inputs
+; X = Cell index
+; Y = Neighbor index
+; Preserves: X, Y
+; Destroys: A
+cng_inc_neighbor:
+    LDA cell_grid_page,Y
+    BEQ cng_inc_neighbor_return
+    INC cell_neighbor_count_page,X
+cng_inc_neighbor_return:
+    RTS
+; end of routine calculate_next_generation
+
+; Routine: Use the calculated neighbor counts to advance the grid to the next generation
+advance_grid_generation:
+    LDX #$00
+aggloop:
+    JSR agg_death_check             ; Determine if a cell survives
+    JSR agg_populate_check          ; Determine if a cell populates
+    INX
+    BNE aggloop                     ; After X = 0xFF, return
+    INC generation_count
+    RTS
+
+agg_death_check:
+    LDA cell_grid_page,X            ; Load the cell status into A
+    BEQ agg_dc_return               ; If the cell is dead, return
+    LDY cell_neighbor_count_page,X  ; Load the cell's neighbor count to Y
+    CPY #$02
+    BMI kill_cell                   ; If the cell has less than two neighbors, kill it (0|1 - 2 < 0)
+    CPY #$03
+    BPL kill_cell                   ; If the cell has more than three neighbors, kill it (4|5|6|7|8 - 3 > 0)
+    JMP agg_dc_return               ; Cell does not meet any death conditions, return
+kill_cell:
+    LDA #$00
+    STA cell_grid_page,X
+agg_dc_return:
+    RTS
+
+agg_populate_check:
+    LDA cell_grid_page,X            ; Load the cell status into A
+    BNE agg_pc_return               ; If the cell is alive, return
+    LDY cell_neighbor_count_page,X  ; Load the cell's neighbor count to Y
+    CPY #$03
+    BNE agg_pc_return               ; If the cell does not have 3 neighbors, return
+    LDA #$01
+    STA cell_grid_page,X            ; Populate the cell
+agg_pc_return:
+    RTS
+; end of routine advance_grid_generation
+
+; Render the current grid to the display then calculate the next generation
+irq_routine:
+    LDX #$00
+irqloop:
+    LDA cell_grid_page,X            ; Load the cell status into A
+    BEQ draw_dead_cell              ; If the cell is dead, draw a dead cell. Otherwise draw a living cell.
+    LDA #%00101001                  ; Green '*'
+    JMP irqloop_iteration_end
+draw_dead_cell:
+    LDA #%00000001                  ; White '.'
+irqloop_iteration_end:
+    STA display_page,X              ; Write the cell's pixel to the display buffer
+    INX
+    BNE irqloop                     ; After X = 0xFF, return
+irq_post_loop:
+    JSR calculate_next_generation
+    JSR advance_grid_generation
+    LDA generation_count            ; Check how many generations have been calcuated
+    BNE irqreturn                   ; If it hasn't overflowed to 0, return
+    LDA #$01
+    STA flag_done_running           ; If it has overflowed to 0, flag the program for termination
+irqreturn:
+    RTI
+
+nmi_routine:
+    RTI
+
+.org $FFFA
+    .word nmi_routine
+    .word init
+    .word irq_routine
