@@ -228,8 +228,8 @@ agg_death_check:
     LDY cell_neighbor_count_page,X  ; Load the cell's neighbor count to Y
     CPY #$02
     BMI kill_cell                   ; If the cell has less than two neighbors, kill it (0|1 - 2 < 0)
-    CPY #$03
-    BPL kill_cell                   ; If the cell has more than three neighbors, kill it (4|5|6|7|8 - 3 > 0)
+    CPY #$04
+    BPL kill_cell                   ; If the cell has more than three neighbors, kill it (4|5|6|7|8 - 4 >= 0)
     JMP agg_dc_return               ; Cell does not meet any death conditions, return
 kill_cell:
     LDA #$00
