@@ -13,7 +13,7 @@ size_t Display::getRefreshRate() {
         case RefreshRate::TWENTY: return 20;
         case RefreshRate::TWENTY_FIVE: return 25;
     }
-    return 1; /**< Should be unreachable. This is to satisfy a compiler warning regarding return values at the end of function. */
+    return 1; /* Should be unreachable. This is to satisfy a compiler warning regarding return values at the end of function. */
 }
 
 size_t Display::getRefreshRateInMs() {
@@ -27,7 +27,7 @@ size_t Display::getRefreshRateInMs() {
         case RefreshRate::TWENTY: return 50;
         case RefreshRate::TWENTY_FIVE: return 40;
     }
-    return 1000; /**< Should be unreachable. This is to satisfy a compiler warning regarding return values at the end of function. */
+    return 1000; /* Should be unreachable. This is to satisfy a compiler warning regarding return values at the end of function. */
 }
 
 Byte Display::read(Byte page, Byte offset) {

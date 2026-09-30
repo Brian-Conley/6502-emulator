@@ -288,15 +288,18 @@ Mos6502::ResolvedAddress Mos6502::addrIndirectX() {
 Mos6502::ResolvedAddress Mos6502::addrIndirectY() {
     Byte operand = readByte(pc);
     pc++;
-    Word address = (readByte(operand + 1) << 8) + readByte(operand) + y;
-    return { address, false };
+    Word baseAddress = (readByte(operand + 1) << 8) + readByte(operand);
+    Word address = baseAddress + y;
+    bool pageCrossed = (address >> 8) != (baseAddress >> 8);
+    return { address, pageCrossed};
 }
 
 Mos6502::ResolvedAddress Mos6502::addrRelative() {
     signed short operand = static_cast<signed char>(readByte(pc));
     pc++;
     Word address = pc + operand;
-    return { address, false };
+    bool pageCrossed = (address >> 8) != (pc >> 8);
+    return { address, pageCrossed };
 }
 
 Mos6502::ResolvedAddress Mos6502::addrZeroPage() {

@@ -130,7 +130,7 @@ std::shared_ptr<Display> createPixelDisplayDevice(
  *
  * @param startPage The starting page in the global address space.
  * @param powerOffCallback Function to handle powerOff() logic.
- * @param resetCallback Function to handle reste() logic.
+ * @param resetCallback Function to handle reset() logic.
  */
 std::shared_ptr<SystemInterface> createSystemInterfaceDevice(Byte startPage);
 
