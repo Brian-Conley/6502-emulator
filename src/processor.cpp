@@ -168,60 +168,60 @@ void Mos6502::executeInstruction() {
         case InstructionType::ADC: opADC(ins.mode); break;
         case InstructionType::AND: opAND(ins.mode); break;
         case InstructionType::ASL: opASL(ins.mode); break;
-        case InstructionType::BCC: opBCC(ins.mode); break;
-        case InstructionType::BCS: opBCS(ins.mode); break;
-        case InstructionType::BEQ: opBEQ(ins.mode); break;
+        case InstructionType::BCC: opBranch(Flags::C, false); break;
+        case InstructionType::BCS: opBranch(Flags::C, true); break;
+        case InstructionType::BEQ: opBranch(Flags::Z, true); break;
         case InstructionType::BIT: opBIT(ins.mode); break;
-        case InstructionType::BMI: opBMI(ins.mode); break;
-        case InstructionType::BNE: opBNE(ins.mode); break;
-        case InstructionType::BPL: opBPL(ins.mode); break;
-        case InstructionType::BRK: opBRK(ins.mode); break;
-        case InstructionType::BVC: opBVC(ins.mode); break;
-        case InstructionType::BVS: opBVS(ins.mode); break;
-        case InstructionType::CLC: opCLC(ins.mode); break;
-        case InstructionType::CLD: opCLD(ins.mode); break;
-        case InstructionType::CLI: opCLI(ins.mode); break;
-        case InstructionType::CLV: opCLV(ins.mode); break;
+        case InstructionType::BMI: opBranch(Flags::N, true); break;
+        case InstructionType::BNE: opBranch(Flags::Z, false); break;
+        case InstructionType::BPL: opBranch(Flags::N, false); break;
+        case InstructionType::BRK: opBRK(); break;
+        case InstructionType::BVC: opBranch(Flags::V, false); break;
+        case InstructionType::BVS: opBranch(Flags::V, true); break;
+        case InstructionType::CLC: opCLC(); break;
+        case InstructionType::CLD: opCLD(); break;
+        case InstructionType::CLI: opCLI(); break;
+        case InstructionType::CLV: opCLV(); break;
         case InstructionType::CMP: opCMP(ins.mode); break;
         case InstructionType::CPX: opCPX(ins.mode); break;
         case InstructionType::CPY: opCPY(ins.mode); break;
         case InstructionType::DEC: opDEC(ins.mode); break;
-        case InstructionType::DEX: opDEX(ins.mode); break;
-        case InstructionType::DEY: opDEY(ins.mode); break;
+        case InstructionType::DEX: opDEX(); break;
+        case InstructionType::DEY: opDEY(); break;
         case InstructionType::EOR: opEOR(ins.mode); break;
         case InstructionType::INC: opINC(ins.mode); break;
-        case InstructionType::INX: opINX(ins.mode); break;
-        case InstructionType::INY: opINY(ins.mode); break;
+        case InstructionType::INX: opINX(); break;
+        case InstructionType::INY: opINY(); break;
         case InstructionType::JMP: opJMP(ins.mode); break;
         case InstructionType::JSR: opJSR(ins.mode); break;
         case InstructionType::LDA: opLDA(ins.mode); break;
         case InstructionType::LDX: opLDX(ins.mode); break;
         case InstructionType::LDY: opLDY(ins.mode); break;
         case InstructionType::LSR: opLSR(ins.mode); break;
-        case InstructionType::NOP: opNOP(ins.mode); break;
+        case InstructionType::NOP: opNOP(); break;
         case InstructionType::ORA: opORA(ins.mode); break;
-        case InstructionType::PHA: opPHA(ins.mode); break;
-        case InstructionType::PHP: opPHP(ins.mode); break;
-        case InstructionType::PLA: opPLA(ins.mode); break;
-        case InstructionType::PLP: opPLP(ins.mode); break;
+        case InstructionType::PHA: opPHA(); break;
+        case InstructionType::PHP: opPHP(); break;
+        case InstructionType::PLA: opPLA(); break;
+        case InstructionType::PLP: opPLP(); break;
         case InstructionType::ROL: opROL(ins.mode); break;
         case InstructionType::ROR: opROR(ins.mode); break;
-        case InstructionType::RTI: opRTI(ins.mode); break;
-        case InstructionType::RTS: opRTS(ins.mode); break;
+        case InstructionType::RTI: opRTI(); break;
+        case InstructionType::RTS: opRTS(); break;
         case InstructionType::SBC: opSBC(ins.mode); break;
-        case InstructionType::SEC: opSEC(ins.mode); break;
-        case InstructionType::SED: opSED(ins.mode); break;
-        case InstructionType::SEI: opSEI(ins.mode); break;
+        case InstructionType::SEC: opSEC(); break;
+        case InstructionType::SED: opSED(); break;
+        case InstructionType::SEI: opSEI(); break;
         case InstructionType::STA: opSTA(ins.mode); break;
         case InstructionType::STX: opSTX(ins.mode); break;
         case InstructionType::STY: opSTY(ins.mode); break;
-        case InstructionType::TAX: opTAX(ins.mode); break;
-        case InstructionType::TAY: opTAY(ins.mode); break;
-        case InstructionType::TSX: opTSX(ins.mode); break;
-        case InstructionType::TXA: opTXA(ins.mode); break;
-        case InstructionType::TXS: opTXS(ins.mode); break;
-        case InstructionType::TYA: opTYA(ins.mode); break;
-        case InstructionType::Unknown: opUnknown(ins.mode); break;
+        case InstructionType::TAX: opTAX(); break;
+        case InstructionType::TAY: opTAY(); break;
+        case InstructionType::TSX: opTSX(); break;
+        case InstructionType::TXA: opTXA(); break;
+        case InstructionType::TXS: opTXS(); break;
+        case InstructionType::TYA: opTYA(); break;
+        case InstructionType::Unknown: opUnknown(); break;
     }
     CumulativeCycles += ins.cycles;
 }
@@ -365,35 +365,17 @@ void Mos6502::opASL(AddressingMode mode) {
     setCarryFromValue(value);
 }
 
-void Mos6502::opBCC(AddressingMode mode) {
-    if (!getFlag(Flags::C)) {
-        auto addr = resolveAddress(mode);
+void Mos6502::opBranch(Flags flag, bool branchCondition) {
+    // BCC, BCS, BEQ, BNE, BMI, BPL, BVC, BVS
+    if (getFlag(flag) == branchCondition) {
+        // Branch taken
+        ++CumulativeCycles;
+        auto addr = resolveAddress(AddressingMode::Relative);
         if (addr.pageCrossed)
             ++CumulativeCycles;
         pc = addr.address;
     } else {
-        ++pc;
-    }
-}
-
-void Mos6502::opBCS(AddressingMode mode) {
-    if (getFlag(Flags::C)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
-}
-
-void Mos6502::opBEQ(AddressingMode mode) {
-    if (getFlag(Flags::Z)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
+        // Branch not taken
         ++pc;
     }
 }
@@ -408,41 +390,7 @@ void Mos6502::opBIT(AddressingMode mode) {
     setFlag(Flags::V, value & 0x40);
 }
 
-void Mos6502::opBMI(AddressingMode mode) {
-    if (getFlag(Flags::N)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
-}
-
-void Mos6502::opBNE(AddressingMode mode) {
-    if (!getFlag(Flags::Z)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
-}
-
-void Mos6502::opBPL(AddressingMode mode) {
-    if (!getFlag(Flags::N)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
-}
-
-void Mos6502::opBRK(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opBRK() {
     ++pc;
     stackPush(pc >> 8);
     stackPush(pc * 0xFF);
@@ -451,46 +399,20 @@ void Mos6502::opBRK(AddressingMode mode) {
     pc = readByte(0xFFFE | (readByte(0xFFFF) << 8));
 }
 
-void Mos6502::opBVC(AddressingMode mode) {
-    if (!getFlag(Flags::V)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
+void Mos6502::opCLC() {
+    setFlag(Flags::C, false);
 }
 
-void Mos6502::opBVS(AddressingMode mode) {
-    if (getFlag(Flags::V)) {
-        auto addr = resolveAddress(mode);
-        if (addr.pageCrossed)
-            ++CumulativeCycles;
-        pc = addr.address;
-    } else {
-        ++pc;
-    }
+void Mos6502::opCLD() {
+    setFlag(Flags::D, false);
 }
 
-void Mos6502::opCLC(AddressingMode mode) {
-    if (mode == AddressingMode::Implied)
-        setFlag(Flags::C, false);
+void Mos6502::opCLI() {
+    setFlag(Flags::I, false);
 }
 
-void Mos6502::opCLD(AddressingMode mode) {
-    if (mode == AddressingMode::Implied)
-        setFlag(Flags::D, false);
-}
-
-void Mos6502::opCLI(AddressingMode mode) {
-    if (mode == AddressingMode::Implied)
-        setFlag(Flags::I, false);
-}
-
-void Mos6502::opCLV(AddressingMode mode) {
-    if (mode == AddressingMode::Implied)
-        setFlag(Flags::V, false);
+void Mos6502::opCLV() {
+    setFlag(Flags::V, false);
 }
 
 void Mos6502::opCMP(AddressingMode mode) {
@@ -533,15 +455,13 @@ void Mos6502::opDEC(AddressingMode mode) {
     setZeroFromValue(value);
 }
 
-void Mos6502::opDEX(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opDEX() {
     x -= 1;
     setNegativeFromValue(x);
     setZeroFromValue(x);
 }
 
-void Mos6502::opDEY(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opDEY() {
     y -= 1;
     setNegativeFromValue(y);
     setZeroFromValue(y);
@@ -567,15 +487,13 @@ void Mos6502::opINC(AddressingMode mode) {
     setZeroFromValue(value);
 }
 
-void Mos6502::opINX(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opINX() {
     ++x;
     setNegativeFromValue(x);
     setZeroFromValue(x);
 }
 
-void Mos6502::opINY(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opINY() {
     ++y;
     setNegativeFromValue(y);
     setZeroFromValue(y);
@@ -644,8 +562,8 @@ void Mos6502::opLSR(AddressingMode mode) {
     setCarryFromValue(value);
 }
 
-void Mos6502::opNOP(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opNOP() {
+    return;
 }
 
 void Mos6502::opORA(AddressingMode mode) {
@@ -657,25 +575,21 @@ void Mos6502::opORA(AddressingMode mode) {
     setZeroFromValue(a);
 }
 
-void Mos6502::opPHA(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opPHA() {
     stackPush(a);
 }
 
-void Mos6502::opPHP(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opPHP() {
     stackPush(sr);
 }
 
-void Mos6502::opPLA(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opPLA() {
     a = stackPull();
     setNegativeFromValue(a);
     setZeroFromValue(a);
 }
 
-void Mos6502::opPLP(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opPLP() {
     sr = stackPull();
 }
 
@@ -721,16 +635,14 @@ void Mos6502::opROR(AddressingMode mode) {
     setFlag(Flags::C, newCarry);
 }
 
-void Mos6502::opRTI(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opRTI() {
     sr = stackPull() & 0b11101111;
     Byte pcl = stackPull();
     Byte pch = stackPull();
     pc = pcl | (pch << 8);
 }
 
-void Mos6502::opRTS(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opRTS() {
     Byte pcl = stackPull();
     Byte pch = stackPull();
     pc = (pcl | (pch << 8)) + 1;
@@ -751,18 +663,15 @@ void Mos6502::opSBC(AddressingMode mode) {
     a = sumByte;
 }
 
-void Mos6502::opSEC(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opSEC() {
     setFlag(Flags::C, true);
 }
 
-void Mos6502::opSED(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opSED() {
     setFlag(Flags::D, true);
 }
 
-void Mos6502::opSEI(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opSEI() {
     setFlag(Flags::I, true);
 }
 
@@ -787,48 +696,42 @@ void Mos6502::opSTY(AddressingMode mode) {
     writeByte(addr.address, y);
 }
 
-void Mos6502::opTAX(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTAX() {
     x = a;
     setNegativeFromValue(x);
     setZeroFromValue(x);
 }
 
-void Mos6502::opTAY(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTAY() {
     y = a;
     setNegativeFromValue(y);
     setZeroFromValue(y);
 }
 
-void Mos6502::opTSX(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTSX() {
     x = sp;
     setNegativeFromValue(x);
     setZeroFromValue(x);
 }
 
-void Mos6502::opTXA(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTXA() {
     a = x;
     setNegativeFromValue(a);
     setZeroFromValue(a);
 }
 
-void Mos6502::opTXS(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTXS() {
     sp = x;
 }
 
-void Mos6502::opTYA(AddressingMode mode) {
-    if (mode != AddressingMode::Implied) return;
+void Mos6502::opTYA() {
     a = y;
     setNegativeFromValue(a);
     setZeroFromValue(a);
 }
 
-void Mos6502::opUnknown(AddressingMode mode) {
-    if (mode == AddressingMode::Unknown) return;
+void Mos6502::opUnknown() {
+    return;
 }
 
 }
