@@ -44,7 +44,7 @@ struct CpuTestFixture {
                 )
         {}
 
-    void load_program(std::vector<ProgramMemory>& program) {
+    void load_program(const std::vector<ProgramMemory>& program) {
         if (program.empty()) return;
         // Wipe the memory
         std::ranges::fill(memory, 0x00);
@@ -161,3 +161,356 @@ TEST_CASE("Instruction SBC", "[Processor][SBC]") {
         // - BCD borrow behavior when C=0 initially
     }
 }
+
+TEST_CASE("Instruction BCC", "[Processor][BCC]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x90;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_CARRY);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BCS", "[Processor][BCS]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xB0;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_CARRY);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_CARRY);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BEQ", "[Processor][BEQ]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xF0;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_ZERO);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_ZERO);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BMI", "[Processor][BMI]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x30;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_NEGATIVE);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_NEGATIVE);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BNE", "[Processor][BNE]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xD0;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_ZERO);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BPL", "[Processor][BPL]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x10;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_NEGATIVE);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BVC", "[Processor][BVC]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x50;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_OVERFLOW);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+TEST_CASE("Instruction BVS", "[Processor][BVS]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x70;
+
+    SECTION("Branch not taken") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+    }
+
+    SECTION("Branch taken (no page crossing)") {
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_OVERFLOW);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8022);
+        REQUIRE(state.totalcycles == 3);
+    }
+
+    SECTION("Branch taken (with page crossing)") {
+        sys.load_program({
+            { 0x80C0, {opcode, 0x40} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_OVERFLOW);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.pc == 0x8102);
+        REQUIRE(state.totalcycles == 4);
+    }
+}
+
+// TODO ADC
+// TODO AND
+// TODO ASL
+// TODO BIT
+// TODO BRK
+// TODO CLC
+// TODO CLD
+// TODO CLI
+// TODO CLV
+// TODO CMP
+// TODO CPX
+// TODO CPY
+// TODO DEC
+// TODO DEX
+// TODO DEY
+// TODO EOR
+// TODO INC
+// TODO INX
+// TODO INY
+// TODO JMP
+// TODO JSR
+// TODO LDA
+// TODO LDX
+// TODO LDY
+// TODO LSR
+// TODO NOP
+// TODO ORA
+// TODO PHA
+// TODO PHP
+// TODO PLA
+// TODO PLP
+// TODO ROL
+// TODO ROR
+// TODO RTI
+// TODO RTS
+// TODO SBC
+// TODO SEC
+// TODO SED
+// TODO SEI
+// TODO STA
+// TODO STX
+// TODO STY
+// TODO TAX
+// TODO TAY
+// TODO TSX
+// TODO TXA
+// TODO TXS
+// TODO TYA,
