@@ -178,10 +178,10 @@ void Mos6502::executeInstruction() {
         case InstructionType::BRK: opBRK(); break;
         case InstructionType::BVC: opBranch(Flags::V, false); break;
         case InstructionType::BVS: opBranch(Flags::V, true); break;
-        case InstructionType::CLC: opCLC(); break;
-        case InstructionType::CLD: opCLD(); break;
-        case InstructionType::CLI: opCLI(); break;
-        case InstructionType::CLV: opCLV(); break;
+        case InstructionType::CLC: opFlag(Flags::C, false); break;
+        case InstructionType::CLD: opFlag(Flags::D, false); break;
+        case InstructionType::CLI: opFlag(Flags::I, false); break;
+        case InstructionType::CLV: opFlag(Flags::V, false); break;
         case InstructionType::CMP: opCMP(ins.mode); break;
         case InstructionType::CPX: opCPX(ins.mode); break;
         case InstructionType::CPY: opCPY(ins.mode); break;
@@ -209,9 +209,9 @@ void Mos6502::executeInstruction() {
         case InstructionType::RTI: opRTI(); break;
         case InstructionType::RTS: opRTS(); break;
         case InstructionType::SBC: opSBC(ins.mode); break;
-        case InstructionType::SEC: opSEC(); break;
-        case InstructionType::SED: opSED(); break;
-        case InstructionType::SEI: opSEI(); break;
+        case InstructionType::SEC: opFlag(Flags::C, true); break;
+        case InstructionType::SED: opFlag(Flags::D, true); break;
+        case InstructionType::SEI: opFlag(Flags::I, true); break;
         case InstructionType::STA: opSTA(ins.mode); break;
         case InstructionType::STX: opSTX(ins.mode); break;
         case InstructionType::STY: opSTY(ins.mode); break;
@@ -399,22 +399,6 @@ void Mos6502::opBRK() {
     pc = readByte(0xFFFE | (readByte(0xFFFF) << 8));
 }
 
-void Mos6502::opCLC() {
-    setFlag(Flags::C, false);
-}
-
-void Mos6502::opCLD() {
-    setFlag(Flags::D, false);
-}
-
-void Mos6502::opCLI() {
-    setFlag(Flags::I, false);
-}
-
-void Mos6502::opCLV() {
-    setFlag(Flags::V, false);
-}
-
 void Mos6502::opCMP(AddressingMode mode) {
     auto addr = resolveAddress(mode);
     if (addr.pageCrossed)
@@ -475,6 +459,10 @@ void Mos6502::opEOR(AddressingMode mode) {
     a = a ^ value;
     setNegativeFromValue(a);
     setZeroFromValue(a);
+}
+
+void Mos6502::opFlag(Flags flag, bool state) {
+    setFlag(flag, state);
 }
 
 void Mos6502::opINC(AddressingMode mode) {
@@ -661,18 +649,6 @@ void Mos6502::opSBC(AddressingMode mode) {
     setNegativeFromValue(sumByte);
     setOverflowFromValue(sumByte, a, operand);
     a = sumByte;
-}
-
-void Mos6502::opSEC() {
-    setFlag(Flags::C, true);
-}
-
-void Mos6502::opSED() {
-    setFlag(Flags::D, true);
-}
-
-void Mos6502::opSEI() {
-    setFlag(Flags::I, true);
 }
 
 void Mos6502::opSTA(AddressingMode mode) {

@@ -116,10 +116,6 @@ class Mos6502 {
         void opBranch(Flags flag, bool branchCondition);
         void opBIT(AddressingMode mode);
         void opBRK();
-        void opCLC();
-        void opCLD();
-        void opCLI();
-        void opCLV();
         void opCMP(AddressingMode mode);
         void opCPX(AddressingMode mode);
         void opCPY(AddressingMode mode);
@@ -127,6 +123,7 @@ class Mos6502 {
         void opDEX();
         void opDEY();
         void opEOR(AddressingMode mode);
+        void opFlag(Flags flag, bool state);
         void opINC(AddressingMode mode);
         void opINX();
         void opINY();
@@ -147,9 +144,6 @@ class Mos6502 {
         void opRTI();
         void opRTS();
         void opSBC(AddressingMode mode);
-        void opSEC();
-        void opSED();
-        void opSEI();
         void opSTA(AddressingMode mode);
         void opSTX(AddressingMode mode);
         void opSTY(AddressingMode mode);
