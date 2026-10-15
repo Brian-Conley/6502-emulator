@@ -75,28 +75,6 @@ struct CpuTestFixture {
     }
 };
 
-TEST_CASE("Instruction AND", "[Processor][AND]") {
-    CpuTestFixture sys;
-
-    SECTION("Addressing Modes") {
-        // - Immediate (#$xx)
-        // - Zero Page ($xx)
-        // - Zero Page,X ($xx,X)
-        // - Absolute ($xxxx)
-        // - Absolute,X ($xxxx,X)
-        // - Absolute,Y ($xxxx,Y)
-        // - Indirect,X (($xx,X))
-        // - Indirect,Y (($xx),Y)
-    }
-
-    SECTION("Flags") {
-        // Negative flag set
-        // Negative flag clear
-        // Zero flag set
-        // Zero flag clear
-    }
-}
-
 /******************************************
  * Group: Conditional Branch Instructions *
  * BCC, BCS, BEQ, BMI, BNE, BPL, BVC, BVS *
