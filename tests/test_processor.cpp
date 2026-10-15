@@ -75,41 +75,6 @@ struct CpuTestFixture {
     }
 };
 
-TEST_CASE("Instruction ADC", "[Processor][ADC]") {
-    CpuTestFixture sys;
-
-    SECTION("Addressing Modes") {
-        // - Immediate
-        // - Zero Page
-        // - Zero Page,X
-        // - Absolute
-        // - Absolute,X (no page crossing)
-        // - Absolute,X (with page crossing)
-        // - Absolute,Y (no page crossing)
-        // - Absolute,Y (with page crossing)
-        // - Indirect,X
-        // - Indirect,Y (no page crossing)
-        // - Indirect,Y (with page crossing)
-    }
-
-    SECTION("Binary Arithmetic & Flags") {
-        // - Basic addition without carry (e.g., $10 + $20 = $30, C=0, Z=0, N=0, V=0)
-        // - Addition with incoming carry (A + M + 1)
-        // - Zero result flag (e.g., $FF + $01 = $00, Z=1, C=1)
-        // - Negative result flag (MSB set, N=1)
-        // - Positive overflow (e.g., $7F + $01 = $80, V=1, N=1)
-        // - Negative overflow (e.g., $80 + $80 = $00, V=1, C=1, Z=1)
-        // - No overflow cases crossing sign boundaries safely
-    }
-
-    SECTION("Decimal (BCD) Mode Arithmetic") {
-        // - Basic BCD addition without carry (e.g., $15 + $24 = $39, D=1)
-        // - Low nibble correction (e.g., $08 + $05 = $13, triggers +$06 adjustment)
-        // - High nibble correction (e.g., $50 + $50 = $00, sets Carry in BCD for > 99)
-        // - BCD addition with incoming carry flag
-    }
-}
-
 TEST_CASE("Instruction AND", "[Processor][AND]") {
     CpuTestFixture sys;
 
@@ -132,35 +97,10 @@ TEST_CASE("Instruction AND", "[Processor][AND]") {
     }
 }
 
-TEST_CASE("Instruction SBC", "[Processor][SBC]") {
-    CpuTestFixture sys;
-
-    SECTION("Addressing Modes") {
-        // - Immediate (#$xx)
-        // - Zero Page ($xx)
-        // - Zero Page,X ($xx,X)
-        // - Absolute ($xxxx)
-        // - Absolute,X ($xxxx,X)
-        // - Absolute,Y ($xxxx,Y)
-        // - Indirect,X (($xx,X))
-        // - Indirect,Y (($xx),Y)
-    }
-
-    SECTION("Binary Arithmetic & Flags") {
-        // - Basic subtraction with C=1 (no borrow) (e.g., $50 - $20 = $30, C=1, Z=0)
-        // - Subtraction with C=0 (borrow) (A - M - 1)
-        // - Zero result flag (e.g., $50 - $50 = $00, Z=1, C=1)
-        // - Negative result / Borrow condition (e.g., $10 - $20 = $F0, C=0, N=1)
-        // - Overflow flag (V) during signed subtraction edge cases
-    }
-
-    SECTION("Decimal (BCD) Mode Arithmetic") {
-        // - Basic BCD subtraction with C=1 (e.g., $55 - $22 = $33, D=1)
-        // - Low nibble underflow correction (triggers -$06 adjustment)
-        // - High nibble underflow correction (triggers -$60 adjustment)
-        // - BCD borrow behavior when C=0 initially
-    }
-}
+/******************************************
+ * Group: Conditional Branch Instructions *
+ * BCC, BCS, BEQ, BMI, BNE, BPL, BVC, BVS *
+ ******************************************/
 
 TEST_CASE("Instruction BCC", "[Processor][BCC]") {
     CpuTestFixture sys;
@@ -466,45 +406,132 @@ TEST_CASE("Instruction BVS", "[Processor][BVS]") {
     }
 }
 
-// TODO ADC
-// TODO AND
-// TODO ASL
-// TODO BIT
-// TODO BRK
-// TODO CLC
-// TODO CLD
-// TODO CLI
-// TODO CLV
-// TODO CMP
-// TODO CPX
-// TODO CPY
-// TODO DEC
-// TODO DEX
-// TODO DEY
-// TODO EOR
-// TODO INC
-// TODO INX
-// TODO INY
-// TODO JMP
-// TODO JSR
+/*************************************
+ * Group: Flag Instructions          *
+ * CLC, CLD, CLI, CLV, SEC, SED, SEI *
+ *************************************/
+
+TEST_CASE("Instruction CLC", "[Processor][CLC]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x18;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_CARRY);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE_FALSE(flag_status(FLAG_CARRY, state.status));
+}
+
+TEST_CASE("Instruction CLD", "[Processor][CLD]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xD8;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_DECIMAL);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE_FALSE(flag_status(FLAG_DECIMAL, state.status));
+}
+
+TEST_CASE("Instruction CLI", "[Processor][CLI]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x58;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_INTERRUPT_DISABLE);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE_FALSE(flag_status(FLAG_INTERRUPT_DISABLE, state.status));
+}
+
+TEST_CASE("Instruction CLV", "[Processor][CLV]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xB8;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00 | FLAG_OVERFLOW);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE_FALSE(flag_status(FLAG_OVERFLOW, state.status));
+}
+
+TEST_CASE("Instruction SEC", "[Processor][SEC]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x38;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE(flag_status(FLAG_CARRY, state.status));
+}
+
+TEST_CASE("Instruction SED", "[Processor][SED]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xF8;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE(flag_status(FLAG_DECIMAL, state.status));
+}
+
+TEST_CASE("Instruction SEI", "[Processor][SEI]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x78;
+
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0x00);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE(flag_status(FLAG_INTERRUPT_DISABLE, state.status));
+}
+
+/********************************
+ * Group: Transfer Instructions *
+ * LDA, LDX, LDY, STA, STX, STY *
+ * TAX, TAY, TSX, TXA, TXS, TYA *
+ ********************************/
+
 // TODO LDA
 // TODO LDX
 // TODO LDY
-// TODO LSR
-// TODO NOP
-// TODO ORA
-// TODO PHA
-// TODO PHP
-// TODO PLA
-// TODO PLP
-// TODO ROL
-// TODO ROR
-// TODO RTI
-// TODO RTS
-// TODO SBC
-// TODO SEC
-// TODO SED
-// TODO SEI
 // TODO STA
 // TODO STX
 // TODO STY
@@ -514,3 +541,144 @@ TEST_CASE("Instruction BVS", "[Processor][BVS]") {
 // TODO TXA
 // TODO TXS
 // TODO TYA,
+
+/*****************************
+ * Group: Stack Instructions *
+ * PHA, PHP, PLA, PLP        *
+ *****************************/
+
+// TODO PHA
+// TODO PHP
+// TODO PLA
+// TODO PLP
+
+/***********************************
+ * Group: INC and DEC Instructions *
+ * DEC, DEX, DEY, INC, INX, INY    *
+ ***********************************/
+
+// TODO DEC
+// TODO DEX
+// TODO DEY
+// TODO INC
+// TODO INX
+// TODO INY
+
+/**********************************
+ * Group: Arithmetic Instructions *
+ * ADC, SBC                       *
+ **********************************/
+
+TEST_CASE("Instruction ADC", "[Processor][ADC]") {
+    // TODO Implement
+    CpuTestFixture sys;
+
+    SECTION("Addressing Modes") {
+        // - Immediate
+        // - Zero Page
+        // - Zero Page,X
+        // - Absolute
+        // - Absolute,X (no page crossing)
+        // - Absolute,X (with page crossing)
+        // - Absolute,Y (no page crossing)
+        // - Absolute,Y (with page crossing)
+        // - Indirect,X
+        // - Indirect,Y (no page crossing)
+        // - Indirect,Y (with page crossing)
+    }
+
+    SECTION("Binary Arithmetic & Flags") {
+        // - Basic addition without carry (e.g., $10 + $20 = $30, C=0, Z=0, N=0, V=0)
+        // - Addition with incoming carry (A + M + 1)
+        // - Zero result flag (e.g., $FF + $01 = $00, Z=1, C=1)
+        // - Negative result flag (MSB set, N=1)
+        // - Positive overflow (e.g., $7F + $01 = $80, V=1, N=1)
+        // - Negative overflow (e.g., $80 + $80 = $00, V=1, C=1, Z=1)
+        // - No overflow cases crossing sign boundaries safely
+    }
+
+    SECTION("Decimal (BCD) Mode Arithmetic") {
+        // - Basic BCD addition without carry (e.g., $15 + $24 = $39, D=1)
+        // - Low nibble correction (e.g., $08 + $05 = $13, triggers +$06 adjustment)
+        // - High nibble correction (e.g., $50 + $50 = $00, sets Carry in BCD for > 99)
+        // - BCD addition with incoming carry flag
+    }
+}
+
+TEST_CASE("Instruction SBC", "[Processor][SBC]") {
+    // TODO Implement
+    CpuTestFixture sys;
+
+    SECTION("Addressing Modes") {
+        // - Immediate (#$xx)
+        // - Zero Page ($xx)
+        // - Zero Page,X ($xx,X)
+        // - Absolute ($xxxx)
+        // - Absolute,X ($xxxx,X)
+        // - Absolute,Y ($xxxx,Y)
+        // - Indirect,X (($xx,X))
+        // - Indirect,Y (($xx),Y)
+    }
+
+    SECTION("Binary Arithmetic & Flags") {
+        // - Basic subtraction with C=1 (no borrow) (e.g., $50 - $20 = $30, C=1, Z=0)
+        // - Subtraction with C=0 (borrow) (A - M - 1)
+        // - Zero result flag (e.g., $50 - $50 = $00, Z=1, C=1)
+        // - Negative result / Borrow condition (e.g., $10 - $20 = $F0, C=0, N=1)
+        // - Overflow flag (V) during signed subtraction edge cases
+    }
+
+    SECTION("Decimal (BCD) Mode Arithmetic") {
+        // - Basic BCD subtraction with C=1 (e.g., $55 - $22 = $33, D=1)
+        // - Low nibble underflow correction (triggers -$06 adjustment)
+        // - High nibble underflow correction (triggers -$60 adjustment)
+        // - BCD borrow behavior when C=0 initially
+    }
+}
+
+/*****************************************
+ * Group: Logical Operation Instructions *
+ * AND, EOR, ORA                         *
+ *****************************************/
+
+// TODO AND
+// TODO EOR
+// TODO ORA
+
+/****************************************
+ * Group: Shift and Rotate Instructions *
+ * ASL, LSR, ROL, ROR                   *
+ ****************************************/
+
+// TODO ASL
+// TODO LSR
+// TODO ROL
+// TODO ROR
+
+/**********************************
+ * Group: Comparison Instructions *
+ * BIT, CMP, CPX, CPY             *
+ **********************************/
+
+// TODO BIT
+// TODO CMP
+// TODO CPX
+// TODO CPY
+
+/******************************************
+ * Group: JMP and Subroutine Instructions *
+ * JMP, JSR, RTS                          *
+ ******************************************/
+
+// TODO JMP
+// TODO JSR
+// TODO RTS
+
+/*****************************
+ * Group: Other Instructions *
+ * BRK, NOP, RTI             *
+ *****************************/
+
+// TODO BRK
+// TODO NOP
+// TODO RTI

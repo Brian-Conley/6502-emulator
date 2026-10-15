@@ -5,3 +5,5 @@
 
 - Add a unit test for every opcode and instruction side effect
 - Add a unit test for every addressing mode
+
+- Refactor the processor to use one method for clear and set flag instructions
