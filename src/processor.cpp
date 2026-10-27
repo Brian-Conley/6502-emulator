@@ -568,7 +568,7 @@ void Mos6502::opPHA() {
 }
 
 void Mos6502::opPHP() {
-    stackPush(sr);
+    stackPush(sr | 0b00110000);
 }
 
 void Mos6502::opPLA() {

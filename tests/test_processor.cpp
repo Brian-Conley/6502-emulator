@@ -1325,9 +1325,88 @@ TEST_CASE("Instruction TYA", "[Processor][TYA]") {
  * PHA, PHP, PLA, PLP        *
  *****************************/
 
-// TODO PHA
-// TODO PHP
-// TODO PLA
+TEST_CASE("Instruction PHA", "[Processor][PHA]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x48;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::A, 0x20);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 3);
+    REQUIRE(state.stackptr == 0xFE);
+    REQUIRE(sys.memory[0x01FF] == 0x20);
+}
+
+TEST_CASE("Instruction PHP", "[Processor][PHP]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x08;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::Status, 0b11001111);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 3);
+    REQUIRE(state.stackptr == 0xFE);
+    REQUIRE(sys.memory[0x01FF] == 0xFF);
+}
+
+TEST_CASE("Instruction PLA", "[Processor][PLA]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x68;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::StackPointer, 0xFE);
+
+    SECTION("General behavior (N and Z clear)") {
+        sys.memory[0x01FF] = 0x20;
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.stackptr == 0xFF);
+        REQUIRE(state.a == 0x20);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.memory[0x01FF] = 0x81;
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.stackptr == 0xFF);
+        REQUIRE(state.a == 0x81);
+        REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x20);
+        sys.memory[0x01FF] = 0x00;
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.stackptr == 0xFF);
+        REQUIRE(state.a == 0x00);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE(flag_status(state.status, FLAG_ZERO));
+    }
+
+}
+
 // TODO PLP
 
 /***********************************
