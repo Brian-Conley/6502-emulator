@@ -507,18 +507,818 @@ TEST_CASE("Instruction SEI", "[Processor][SEI]") {
  * TAX, TAY, TSX, TXA, TXS, TYA *
  ********************************/
 
-// TODO LDA
-// TODO LDX
-// TODO LDY
-// TODO STA
-// TODO STX
-// TODO STY
-// TODO TAX
-// TODO TAY
-// TODO TSX
-// TODO TXA
-// TODO TXS
-// TODO TYA,
+TEST_CASE("Instruction LDA", "[Processor][LDA]") {
+    CpuTestFixture sys;
+    Byte operand = 0x45;
+
+    SECTION("Addressing mode: Immediate") {
+        Byte opcode = 0xA9;
+        sys.load_program({
+            { 0x8000, {opcode, operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0xA5;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page, X") {
+        Byte opcode = 0xB5;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0025, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0xAD;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2000, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Absolute, X") {
+        Byte opcode = 0xBD;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2005, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Absolute, Y") {
+        Byte opcode = 0xB9;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2005, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Indirect, X") {
+        Byte opcode = 0xA1;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0025, {0x00, 0x20} },
+            { 0x2000, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 6);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Indirect, Y") {
+        Byte opcode = 0xB1;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {0x00, 0x20} },
+            { 0x2005, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Flag behavior: Negative") {
+        Byte opcode = 0xA9; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x81} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+    }
+
+    SECTION("Flag behavior: Zero") {
+        Byte opcode = 0xA9; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x00} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, 0x20); // Set to a garbage non-zero value
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x00);
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction LDX", "[Processor][LDX]") {
+    CpuTestFixture sys;
+    Byte operand = 0x45;
+
+    SECTION("Addressing mode: Immediate") {
+        Byte opcode = 0xA2;
+        sys.load_program({
+            { 0x8000, {opcode, operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0xA6;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(state.x == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page, Y") {
+        Byte opcode = 0xB6;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0025, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.x == operand);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0xAE;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2000, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.x == operand);
+    }
+
+    SECTION("Addressing mode: Absolute, Y") {
+        Byte opcode = 0xBE;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2005, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.x == operand);
+    }
+
+    SECTION("Flag behavior: Negative") {
+        Byte opcode = 0xA2; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x81} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+    }
+
+    SECTION("Flag behavior: Zero") {
+        Byte opcode = 0xA2; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x00} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x20); // Set to a garbage non-zero value
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x00);
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction LDY", "[Processor][LDY]") {
+    CpuTestFixture sys;
+    Byte operand = 0x45;
+
+    SECTION("Addressing mode: Immediate") {
+        Byte opcode = 0xA0;
+        sys.load_program({
+            { 0x8000, {opcode, operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0xA4;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(state.y == operand);
+    }
+
+    SECTION("Addressing mode: Zero Page, X") {
+        Byte opcode = 0xB4;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0025, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.y == operand);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0xAC;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2000, {operand} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.y == operand);
+    }
+
+    SECTION("Addressing mode: Absolute, X") {
+        Byte opcode = 0xBC;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} },
+            { 0x2005, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.y == operand);
+    }
+
+    SECTION("Flag behavior: Negative") {
+        Byte opcode = 0xA0; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x81} }
+        });
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+    }
+
+    SECTION("Flag behavior: Zero") {
+        Byte opcode = 0xA0; // Immediate
+        sys.load_program({
+            { 0x8000, {opcode, 0x00} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x20); // Set to a garbage non-zero value
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == 0x00);
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction STA", "[Processor][STA]") {
+    CpuTestFixture sys;
+    Byte regVal = 0x20;
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0x85;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(sys.memory[0x80] == regVal);
+    }
+
+    SECTION("Addressing mode: Zero Page, X") {
+        Byte opcode = 0x95;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x85] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0x8D;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x2000] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute, X") {
+        Byte opcode = 0x9D;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(sys.memory[0x2005] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute, Y") {
+        Byte opcode = 0x99;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(sys.memory[0x2005] == regVal);
+    }
+
+    SECTION("Addressing mode: Indirect, X") {
+        Byte opcode = 0x81;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0025, {0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 6);
+        REQUIRE(sys.memory[0x2000] == regVal);
+    }
+
+    SECTION("Addressing mode: Indirect, Y") {
+        Byte opcode = 0x91;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 6);
+        REQUIRE(sys.memory[0x2005] == regVal);
+    }
+
+}
+
+TEST_CASE("Instruction STX", "[Processor][STX]") {
+    CpuTestFixture sys;
+    Byte regVal = 0x20;
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0x86;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(sys.memory[0x80] == regVal);
+    }
+
+    SECTION("Addressing mode: Zero Page, Y") {
+        Byte opcode = 0x96;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, regVal);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x85] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0x8E;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x2000] == regVal);
+    }
+
+}
+
+TEST_CASE("Instruction STY", "[Processor][STY]") {
+    CpuTestFixture sys;
+    Byte regVal = 0x20;
+
+    SECTION("Addressing mode: Zero Page") {
+        Byte opcode = 0x84;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 3);
+        REQUIRE(sys.memory[0x80] == regVal);
+    }
+
+    SECTION("Addressing mode: Zero Page, X") {
+        Byte opcode = 0x94;
+        sys.load_program({
+            { 0x8000, {opcode, 0x80} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, regVal);
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x85] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute") {
+        Byte opcode = 0x8C;
+        sys.load_program({
+            { 0x8000, {opcode, 0x00, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, regVal);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 4);
+        REQUIRE(sys.memory[0x2000] == regVal);
+    }
+
+}
+
+TEST_CASE("Instruction TAX", "[Processor][TAX]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xAA;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General behavior (with N and Z clear)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x20);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x20);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x81);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x00);
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction TAY", "[Processor][TAY]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xA8;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General behavior (with N and Z clear)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x20);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == 0x20);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x81);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.y == 0x00);
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction TSX", "[Processor][TSX]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xBA;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General behavior (with N and Z clear)") {
+        sys.processor.registerSet(Mos6502::Register::StackPointer, 0x20);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x20);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.processor.registerSet(Mos6502::Register::StackPointer, 0x81);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::X, 0xFF);
+        sys.processor.registerSet(Mos6502::Register::StackPointer, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.x == 0x00);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction TXA", "[Processor][TXA]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x8A;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General behavior (with N and Z clear)") {
+        sys.processor.registerSet(Mos6502::Register::X, 0x20);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x20);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.processor.registerSet(Mos6502::Register::X, 0x81);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0xFF);
+        sys.processor.registerSet(Mos6502::Register::X, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x00);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
+
+TEST_CASE("Instruction TXS", "[Processor][TXS]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x9A;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::X, 0x20);
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 2);
+    REQUIRE(state.stackptr == 0x20);
+}
+
+TEST_CASE("Instruction TYA", "[Processor][TYA]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x98;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General behavior (with N and Z clear)") {
+        sys.processor.registerSet(Mos6502::Register::Y, 0x20);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x20);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Negative (set)") {
+        sys.processor.registerSet(Mos6502::Register::Y, 0x81);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x81);
+        REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+    }
+
+    SECTION("Flag behavior: Zero (set)") {
+        sys.processor.registerSet(Mos6502::Register::A, 0xFF);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x00);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE(state.a == 0x00);
+        REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+        REQUIRE(flag_status(FLAG_ZERO, state.status));
+    }
+
+}
 
 /*****************************
  * Group: Stack Instructions *
