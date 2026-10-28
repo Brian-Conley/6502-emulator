@@ -578,7 +578,7 @@ void Mos6502::opPLA() {
 }
 
 void Mos6502::opPLP() {
-    sr = stackPull();
+    sr = stackPull() & 0b11101111;
 }
 
 void Mos6502::opROL(AddressingMode mode) {

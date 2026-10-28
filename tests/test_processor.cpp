@@ -1407,7 +1407,30 @@ TEST_CASE("Instruction PLA", "[Processor][PLA]") {
 
 }
 
-// TODO PLP
+TEST_CASE("Instruction PLP", "[Processor][PLP]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x28;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+    sys.processor.registerSet(Mos6502::Register::StackPointer, 0xFE);
+    sys.memory[0x01FF] = 0b11111111;
+    sys.processor.step();
+    auto state = sys.state();
+
+    REQUIRE(state.pc == 0x8001);
+    REQUIRE(state.totalcycles == 4);
+    REQUIRE(state.stackptr == 0xFF);
+    REQUIRE(state.status == 0b11101111);
+    REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+    REQUIRE(flag_status(state.status, FLAG_ZERO));
+    REQUIRE(flag_status(state.status, FLAG_UNUSED));
+    REQUIRE_FALSE(flag_status(state.status, FLAG_BREAK));
+    REQUIRE(flag_status(state.status, FLAG_CARRY));
+    REQUIRE(flag_status(state.status, FLAG_INTERRUPT_DISABLE));
+    REQUIRE(flag_status(state.status, FLAG_DECIMAL));
+    REQUIRE(flag_status(state.status, FLAG_OVERFLOW));
+}
 
 /***********************************
  * Group: INC and DEC Instructions *
