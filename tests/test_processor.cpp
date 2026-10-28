@@ -1437,7 +1437,127 @@ TEST_CASE("Instruction PLP", "[Processor][PLP]") {
  * DEC, DEX, DEY, INC, INX, INY    *
  ***********************************/
 
-// TODO DEC
+TEST_CASE("Instruction DEC", "[Processor][DEC]") {
+    CpuTestFixture sys;
+    Byte addr_hi = 0x20;
+    Byte addr_offset = 0x05;
+    Byte val = 0x40;
+
+    SECTION("Addressing modes") {
+        SECTION("Zero Page") {
+            Byte opcode = 0xC6;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} }
+            });
+            sys.memory[addr_hi] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == val - 1);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero Page, X") {
+            Byte opcode = 0xD6;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[addr_hi + addr_offset] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi + addr_offset] == val - 1);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 6);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Absolute") {
+            Byte opcode = 0xCE;
+            sys.load_program({
+                { 0x8000, {opcode, 0x00, addr_hi} }
+            });
+            sys.memory[addr_hi << 8] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi << 8] == val - 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 6);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Absolute, X") {
+            Byte opcode = 0xDE;
+            sys.load_program({
+                { 0x8000, {opcode, 0x00, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[(addr_hi << 8) + addr_offset] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[(addr_hi << 8) + addr_offset] == val - 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 7);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+
+    SECTION("Flag Behavior") {
+        Byte opcode = 0xC6;
+        sys.load_program({
+            { 0x8000, {opcode, addr_hi} }
+        });
+
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.memory[addr_hi] = 0x90;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == 0x8F);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.memory[addr_hi] = 0x01;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == 0x00);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+
+        }
+    }
+
+    SECTION("Edge Cases") {
+        Byte opcode = 0xC6;
+        sys.load_program({
+            { 0x8000, {opcode, addr_hi} }
+        });
+
+        SECTION("DEC 0x00 should result in 0xFF") {
+            sys.memory[addr_hi] = 0x00;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == 0xFF);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+
+        }
+    }
+}
+
 // TODO DEX
 // TODO DEY
 // TODO INC
