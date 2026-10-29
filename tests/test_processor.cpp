@@ -582,6 +582,21 @@ TEST_CASE("Instruction LDA", "[Processor][LDA]") {
         REQUIRE(state.a == operand);
     }
 
+    SECTION("Addressing mode: Absolute, X (page cross)") {
+        Byte opcode = 0xBD;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} },
+            { 0x2104, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(state.a == operand);
+    }
+
     SECTION("Addressing mode: Absolute, Y") {
         Byte opcode = 0xB9;
         sys.load_program({
@@ -594,6 +609,21 @@ TEST_CASE("Instruction LDA", "[Processor][LDA]") {
 
         REQUIRE(state.pc == 0x8003);
         REQUIRE(state.totalcycles == 4);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Absolute, Y (page cross)") {
+        Byte opcode = 0xB9;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} },
+            { 0x2104, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
         REQUIRE(state.a == operand);
     }
 
@@ -626,6 +656,22 @@ TEST_CASE("Instruction LDA", "[Processor][LDA]") {
 
         REQUIRE(state.pc == 0x8002);
         REQUIRE(state.totalcycles == 5);
+        REQUIRE(state.a == operand);
+    }
+
+    SECTION("Addressing mode: Indirect, Y (page cross)") {
+        Byte opcode = 0xB1;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {0xFF, 0x20} },
+            { 0x2104, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 6);
         REQUIRE(state.a == operand);
     }
 
@@ -735,6 +781,21 @@ TEST_CASE("Instruction LDX", "[Processor][LDX]") {
         REQUIRE(state.x == operand);
     }
 
+    SECTION("Addressing mode: Absolute, Y (page cross)") {
+        Byte opcode = 0xBE;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} },
+            { 0x2104, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(state.x == operand);
+    }
+
     SECTION("Flag behavior: Negative") {
         Byte opcode = 0xA2; // Immediate
         sys.load_program({
@@ -841,6 +902,21 @@ TEST_CASE("Instruction LDY", "[Processor][LDY]") {
         REQUIRE(state.y == operand);
     }
 
+    SECTION("Addressing mode: Absolute, X (page cross)") {
+        Byte opcode = 0xBC;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} },
+            { 0x2104, {operand} }
+        });
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 5);
+        REQUIRE(state.y == operand);
+    }
+
     SECTION("Flag behavior: Negative") {
         Byte opcode = 0xA0; // Immediate
         sys.load_program({
@@ -934,6 +1010,21 @@ TEST_CASE("Instruction STA", "[Processor][STA]") {
         REQUIRE(sys.memory[0x2005] == regVal);
     }
 
+    SECTION("Addressing mode: Absolute, X (page cross)") {
+        Byte opcode = 0x9D;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::X, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 6);
+        REQUIRE(sys.memory[0x2104] == regVal);
+    }
+
     SECTION("Addressing mode: Absolute, Y") {
         Byte opcode = 0x99;
         sys.load_program({
@@ -947,6 +1038,21 @@ TEST_CASE("Instruction STA", "[Processor][STA]") {
         REQUIRE(state.pc == 0x8003);
         REQUIRE(state.totalcycles == 5);
         REQUIRE(sys.memory[0x2005] == regVal);
+    }
+
+    SECTION("Addressing mode: Absolute, Y (page cross)") {
+        Byte opcode = 0x99;
+        sys.load_program({
+            { 0x8000, {opcode, 0xFF, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8003);
+        REQUIRE(state.totalcycles == 6);
+        REQUIRE(sys.memory[0x2104] == regVal);
     }
 
     SECTION("Addressing mode: Indirect, X") {
@@ -981,6 +1087,21 @@ TEST_CASE("Instruction STA", "[Processor][STA]") {
         REQUIRE(sys.memory[0x2005] == regVal);
     }
 
+    SECTION("Addressing mode: Indirect, Y (page cross)") {
+        Byte opcode = 0x91;
+        sys.load_program({
+            { 0x8000, {opcode, 0x20} },
+            { 0x0020, {0xFF, 0x20} }
+        });
+        sys.processor.registerSet(Mos6502::Register::A, regVal);
+        sys.processor.registerSet(Mos6502::Register::Y, 0x05);
+        sys.processor.step();
+        auto state = sys.state();
+
+        REQUIRE(state.pc == 0x8002);
+        REQUIRE(state.totalcycles == 7);
+        REQUIRE(sys.memory[0x2104] == regVal);
+    }
 }
 
 TEST_CASE("Instruction STX", "[Processor][STX]") {
@@ -1505,6 +1626,22 @@ TEST_CASE("Instruction DEC", "[Processor][DEC]") {
             REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
             REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
         }
+
+        SECTION("Absolute, X (page cross)") {
+            Byte opcode = 0xDE;
+            sys.load_program({
+                { 0x8000, {opcode, 0xFF, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[((addr_hi + 1) << 8) + (addr_offset - 1)] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[((addr_hi + 1) << 8) + (addr_offset - 1)] == val - 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 8);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
     }
 
     SECTION("Flag Behavior") {
@@ -1737,6 +1874,22 @@ TEST_CASE("Instruction INC", "[Processor][INC]") {
             REQUIRE(sys.memory[(addr_hi << 8) + addr_offset] == val + 1);
             REQUIRE(state.pc == 0x8003);
             REQUIRE(state.totalcycles == 7);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Absolute, X (page cross)") {
+            Byte opcode = 0xFE;
+            sys.load_program({
+                { 0x8000, {opcode, 0xFF, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[((addr_hi + 1) << 8) + (addr_offset - 1)] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[((addr_hi + 1) << 8) + (addr_offset - 1)] == val + 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 8);
             REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
             REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
         }
