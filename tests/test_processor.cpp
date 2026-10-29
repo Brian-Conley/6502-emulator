@@ -1558,11 +1558,309 @@ TEST_CASE("Instruction DEC", "[Processor][DEC]") {
     }
 }
 
-// TODO DEX
-// TODO DEY
-// TODO INC
-// TODO INX
-// TODO INY
+TEST_CASE("Instruction DEX", "[Processor][DEX]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xCA;
+    Byte val = 0x40;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General Behavior") {
+        sys.processor.registerSet(Mos6502::Register::X, val);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.x == val - 1);
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag Behavior") {
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.processor.registerSet(Mos6502::Register::X, 0x81);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.x == 0x80);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.processor.registerSet(Mos6502::Register::X, 0x01);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.x == 0x00);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+
+    SECTION("Edge Cases") {
+        SECTION("DEX 0x00 should result in 0xFF") {
+            sys.processor.registerSet(Mos6502::Register::X, 0x00);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.x == 0xFF);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+}
+
+TEST_CASE("Instruction DEY", "[Processor][DEY]") {
+    CpuTestFixture sys;
+    Byte opcode = 0x88;
+    Byte val = 0x40;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General Behavior") {
+        sys.processor.registerSet(Mos6502::Register::Y, val);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.y == val - 1);
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag Behavior") {
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.processor.registerSet(Mos6502::Register::Y, 0x81);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.y == 0x80);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.processor.registerSet(Mos6502::Register::Y, 0x01);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.y == 0x00);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+
+    SECTION("Edge Cases") {
+        SECTION("DEY 0x00 should result in 0xFF") {
+            sys.processor.registerSet(Mos6502::Register::Y, 0x00);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.y == 0xFF);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+}
+
+TEST_CASE("Instruction INC", "[Processor][INC]") {
+    CpuTestFixture sys;
+    Byte addr_hi = 0x20;
+    Byte addr_offset = 0x05;
+    Byte val = 0x40;
+
+    SECTION("Addressing modes") {
+        SECTION("Zero Page") {
+            Byte opcode = 0xE6;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} }
+            });
+            sys.memory[addr_hi] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == val + 1);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero Page, X") {
+            Byte opcode = 0xF6;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[addr_hi + addr_offset] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi + addr_offset] == val + 1);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 6);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Absolute") {
+            Byte opcode = 0xEE;
+            sys.load_program({
+                { 0x8000, {opcode, 0x00, addr_hi} }
+            });
+            sys.memory[addr_hi << 8] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi << 8] == val + 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 6);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Absolute, X") {
+            Byte opcode = 0xFE;
+            sys.load_program({
+                { 0x8000, {opcode, 0x00, addr_hi} }
+            });
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.memory[(addr_hi << 8) + addr_offset] = val;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[(addr_hi << 8) + addr_offset] == val + 1);
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 7);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+
+    SECTION("Flag Behavior") {
+        Byte opcode = 0xE6;
+        sys.load_program({
+            { 0x8000, {opcode, addr_hi} }
+        });
+
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.memory[addr_hi] = 0x90;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == 0x91);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.memory[addr_hi] = 0xFF;
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(sys.memory[addr_hi] == 0x00);
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 5);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+
+        }
+    }
+}
+
+TEST_CASE("Instruction INX", "[Processor][INX]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xE8;
+    Byte val = 0x40;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General Behavior") {
+        sys.processor.registerSet(Mos6502::Register::X, val);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.x == val + 1);
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag Behavior") {
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.processor.registerSet(Mos6502::Register::X, 0x80);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.x == 0x81);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.processor.registerSet(Mos6502::Register::X, 0xFF);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.x == 0x00);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+}
+
+TEST_CASE("Instruction INY", "[Processor][INY]") {
+    CpuTestFixture sys;
+    Byte opcode = 0xC8;
+    Byte val = 0x40;
+    sys.load_program({
+        { 0x8000, {opcode} }
+    });
+
+    SECTION("General Behavior") {
+        sys.processor.registerSet(Mos6502::Register::Y, val);
+        sys.processor.step();
+        auto state = sys.state();
+        REQUIRE(state.y == val + 1);
+        REQUIRE(state.pc == 0x8001);
+        REQUIRE(state.totalcycles == 2);
+        REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+        REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+    }
+
+    SECTION("Flag Behavior") {
+        SECTION("Negative flag is set when result >= 0x80") {
+            sys.processor.registerSet(Mos6502::Register::Y, 0x80);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.y == 0x81);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE_FALSE(flag_status(state.status, FLAG_ZERO));
+        }
+
+        SECTION("Zero flag is set when result == 0") {
+            sys.processor.registerSet(Mos6502::Register::Y, 0xFF);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.y == 0x00);
+            REQUIRE(state.pc == 0x8001);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE_FALSE(flag_status(state.status, FLAG_NEGATIVE));
+            REQUIRE(flag_status(state.status, FLAG_ZERO));
+        }
+    }
+}
 
 /**********************************
  * Group: Arithmetic Instructions *
