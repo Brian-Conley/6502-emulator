@@ -327,13 +327,50 @@ void Mos6502::opADC(AddressingMode mode) {
     if (addr.pageCrossed)
         ++CumulativeCycles;
     auto operand = readByte(addr.address);
-    Word sum = a + operand + getFlag(Flags::C);
-    Byte sumByte = sum & 0xFF;
-    setCarryFromValue(sum);
-    setZeroFromValue(sumByte);
-    setNegativeFromValue(sumByte);
-    setOverflowFromValue(sumByte, a, operand);
-    a = sumByte;
+    Byte sum = 0x00;
+    bool carry_in = getFlag(Flags::C);
+    bool carry_out = false;
+
+    if (getFlag(Flags::D)) {
+        // Decimal mode
+        Byte a_lo = a & 0x0F;
+        Byte a_hi = a >> 4;
+        Byte op_lo = operand & 0x0F;
+        Byte op_hi = operand >> 4;
+
+        Byte result_lo = a_lo + op_lo + carry_in;
+        Byte result_lo_carry = 0x00;
+        if (result_lo > 0x09)
+            result_lo += 0x06;
+        if (result_lo > 0x0F) {
+            result_lo_carry = 0x01;
+            result_lo &= 0x0F;
+        }
+
+        Byte result_hi = a_hi + op_hi + result_lo_carry;
+        if (result_hi > 0x09) {
+            result_hi += 0x06;
+        }
+        if (result_hi > 0x0F) {
+            result_hi &= 0x0F;
+            carry_out = true;
+        }
+
+        sum = (result_hi << 4) | result_lo;
+
+    } else {
+        // Not decimal mode
+        Word sum_word = a + operand + carry_in;
+        sum = sum_word & 0xFF;
+        carry_out = sum_word > 0xFF;
+    }
+
+    setCarryFromValue(carry_out << 8);
+    setZeroFromValue(sum);
+    setNegativeFromValue(sum);
+    setOverflowFromValue(sum, a, operand);
+
+    a = sum;
 }
 
 void Mos6502::opAND(AddressingMode mode) {
