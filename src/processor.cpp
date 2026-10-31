@@ -677,15 +677,54 @@ void Mos6502::opSBC(AddressingMode mode) {
     auto addr = resolveAddress(mode);
     if (addr.pageCrossed)
         ++CumulativeCycles;
-    // The 6502 ALU performs SBC by doing an ADC with the inverted operand.
-    auto operand = readByte(addr.address) ^ 0xFF;
-    Word sum = a + operand + getFlag(Flags::C);
-    Byte sumByte = sum & 0xFF;
-    setCarryFromValue(sum);
-    setZeroFromValue(sumByte);
-    setNegativeFromValue(sumByte);
-    setOverflowFromValue(sumByte, a, operand);
-    a = sumByte;
+    auto operand = readByte(addr.address);
+
+    Byte sum = 0x00;
+    bool carry_in = getFlag(Flags::C);
+    bool carry_out = true;
+
+    if (getFlag(Flags::D)) {
+        // Decimal mode
+        Byte borrow_in = 1 - carry_in;
+        Byte a_lo = a & 0x0F;
+        Byte op_lo = operand & 0x0F;
+        Byte result_lo;
+        Byte result_lo_borrow = 0x00;
+        if (a_lo < (op_lo + borrow_in)) {
+            result_lo = a_lo + 0x0A - op_lo - borrow_in;
+            result_lo_borrow = 0x01;
+        } else {
+            result_lo = a_lo - op_lo - borrow_in;
+        }
+
+        Byte borrow_out = 0x00;
+        Byte result_hi;
+        Byte a_hi = a >> 4;
+        Byte op_hi = operand >> 4;
+        if (a_hi < (op_hi + result_lo_borrow)) {
+            result_hi = a_hi + 0x0A - op_hi - result_lo_borrow;
+            borrow_out = 0x01;
+        } else {
+            result_hi = a_hi - op_hi - result_lo_borrow;
+        }
+        carry_out = (borrow_out == 0x00);
+
+        sum = (result_hi << 4) | result_lo;
+
+    } else {
+        // Not decimal mode
+        // The 6502 ALU performs SBC by doing an ADC with the inverted operand.
+        Word sum_word = a + (operand ^ 0xFF) + carry_in;
+        sum = sum_word & 0xFF;
+        carry_out = sum_word > 0xFF;
+    }
+
+    setCarryFromValue(carry_out << 8);
+    setZeroFromValue(sum);
+    setNegativeFromValue(sum);
+    setFlag(Flags::V, ((a ^ (operand ^ 0xFF)) & (a ^ sum) & 0x80) != 0);
+
+    a = sum;
 }
 
 void Mos6502::opSTA(AddressingMode mode) {
