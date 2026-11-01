@@ -3202,7 +3202,270 @@ TEST_CASE("Instruction AND", "[Processor][AND]") {
     }
 }
 
-// TODO EOR
+TEST_CASE("Instruction EOR", "[Processor][EOR]") {
+    SECTION("Addressing Modes") {
+        CpuTestFixture sys;
+        const Byte reg_a = 0b01100100;
+        const Byte operand = 0b00101101;
+        const Byte result = 0b01001001;
+        const Byte addr_hi = 0x20;
+        const Byte addr_offset = 0x05;
+
+        SECTION("Immediate") {
+            Byte opcode = 0x49;
+            sys.load_program({
+                { 0x8000, {opcode, operand} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, reg_a);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(state.a == result);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Zero Page") {
+            Byte opcode = 0x45;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} },
+                { addr_hi, {operand} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, reg_a);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 3);
+            REQUIRE(state.a == result);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Zero Page, X") {
+            Byte opcode = 0x55;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} },
+                { addr_hi + addr_offset, {operand} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, reg_a);
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 4);
+            REQUIRE(state.a == result);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Absolute") {
+            Byte opcode = 0x4D;
+            sys.load_program({
+                { 0x8000, {opcode, 0x00, addr_hi} },
+                { addr_hi << 8, {operand} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, reg_a);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8003);
+            REQUIRE(state.totalcycles == 4);
+            REQUIRE(state.a == result);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Absolute, X") {
+            Byte opcode = 0x5D;
+
+            SECTION("No Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, 0x00, addr_hi} },
+                    { (addr_hi << 8) + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8003);
+                REQUIRE(state.totalcycles == 4);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+
+            SECTION("Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, 0xFF, addr_hi} },
+                    { (addr_hi << 8) + 0xFF + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8003);
+                REQUIRE(state.totalcycles == 5);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+        }
+
+        SECTION("Absolute, Y") {
+            Byte opcode = 0x59;
+
+            SECTION("No Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, 0x00, addr_hi} },
+                    { (addr_hi << 8) + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::Y, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8003);
+                REQUIRE(state.totalcycles == 4);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+
+            SECTION("Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, 0xFF, addr_hi} },
+                    { (addr_hi << 8) + 0xFF + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::Y, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8003);
+                REQUIRE(state.totalcycles == 5);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+        }
+
+        SECTION("Indirect, X") {
+            Byte opcode = 0x41;
+            sys.load_program({
+                { 0x8000, {opcode, addr_hi} },
+                { addr_hi + addr_offset, {0x00, addr_hi} },
+                { addr_hi << 8, {operand} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, reg_a);
+            sys.processor.registerSet(Mos6502::Register::X, addr_offset);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 6);
+            REQUIRE(state.a == result);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Indirect, Y") {
+            Byte opcode = 0x51;
+
+            SECTION("No Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, addr_hi} },
+                    { addr_hi, {0x00, addr_hi} },
+                    { (addr_hi << 8) + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::Y, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8002);
+                REQUIRE(state.totalcycles == 5);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+
+            SECTION("Page Cross") {
+                sys.load_program({
+                    { 0x8000, {opcode, addr_hi} },
+                    { addr_hi, {0xFF, addr_hi} },
+                    { (addr_hi << 8) + 0xFF + addr_offset, {operand} }
+                });
+                sys.processor.registerSet(Mos6502::Register::A, reg_a);
+                sys.processor.registerSet(Mos6502::Register::Y, addr_offset);
+                sys.processor.step();
+                auto state = sys.state();
+                REQUIRE(state.pc == 0x8002);
+                REQUIRE(state.totalcycles == 6);
+                REQUIRE(state.a == result);
+                REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+                REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+            }
+        }
+    }
+
+    SECTION("Flags") {
+        CpuTestFixture sys;
+        Byte opcode = 0x49;
+
+        SECTION("Result Negative Flag Set") {
+            sys.load_program({
+                { 0x8000, {opcode, 0b11111111} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, 0b00000001);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(state.a == 0b11111110);
+            REQUIRE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Result Negative Flag Clear") {
+            sys.load_program({
+                { 0x8000, {opcode, 0b10000000} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, 0b10000001);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(state.a == 0b00000001);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Result Zero Flag Set") {
+            sys.load_program({
+                { 0x8000, {opcode, 0b11111111} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, 0b11111111);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(state.a == 0b00000000);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE(flag_status(FLAG_ZERO, state.status));
+        }
+
+        SECTION("Result Zero Flag Clear") {
+            sys.load_program({
+                { 0x8000, {opcode, 0b01100110} }
+            });
+            sys.processor.registerSet(Mos6502::Register::A, 0b00100010);
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == 0x8002);
+            REQUIRE(state.totalcycles == 2);
+            REQUIRE(state.a == 0b01000100);
+            REQUIRE_FALSE(flag_status(FLAG_NEGATIVE, state.status));
+            REQUIRE_FALSE(flag_status(FLAG_ZERO, state.status));
+        }
+    }
+}
+
 // TODO ORA
 
 /****************************************
