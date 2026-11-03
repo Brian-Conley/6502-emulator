@@ -205,7 +205,6 @@ void Mos6502::executeInstruction() {
         case InstructionType::PLA: opPLA(); break;
         case InstructionType::PLP: opPLP(); break;
         case InstructionType::ROL: opROL(ins.mode); break;
-        case InstructionType::ROR: opROR(ins.mode); break;
         case InstructionType::RTI: opRTI(); break;
         case InstructionType::RTS: opRTS(); break;
         case InstructionType::SBC: opSBC(ins.mode); break;
@@ -637,27 +636,6 @@ void Mos6502::opROL(AddressingMode mode) {
     setNegativeFromValue(value);
     setZeroFromValue(value);
     setFlag(Flags::C, carry_out);
-}
-
-void Mos6502::opROR(AddressingMode mode) {
-    Byte value;
-    Word addr;
-    if (mode == AddressingMode::A) { value = a; }
-    else {
-        auto ra = resolveAddress(mode);
-        if (ra.pageCrossed)
-            ++CumulativeCycles;
-        addr = ra.address;
-        value = readByte(addr);
-    }
-    bool oldCarry = getFlag(Flags::C);
-    bool newCarry = value & 0x1;
-    value = (value >> 1) | (oldCarry << 7);
-    if (mode == AddressingMode::A) { a = value; }
-    else { writeByte(addr, value); }
-    setFlag(Flags::N, value);
-    setFlag(Flags::Z, value);
-    setFlag(Flags::C, newCarry);
 }
 
 void Mos6502::opRTI() {

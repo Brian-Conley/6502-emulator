@@ -140,7 +140,6 @@ class Mos6502 {
         void opPLA();
         void opPLP();
         void opROL(AddressingMode mode);
-        void opROR(AddressingMode mode);
         void opRTI();
         void opRTS();
         void opSBC(AddressingMode mode);

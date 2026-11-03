@@ -9,7 +9,7 @@ enum class InstructionType {
     CLV, CMP, CPX, CPY, DEC, DEX, DEY, EOR,
     INC, INX, INY, JMP, JSR, LDA, LDX, LDY,
     LSR, NOP, ORA, PHA, PHP, PLA, PLP, ROL,
-    ROR, RTI, RTS, SBC, SEC, SED, SEI, STA,
+    RTI, RTS, SBC, SEC, SED, SEI, STA,
     STX, STY, TAX, TAY, TSX, TXA, TXS, TYA,
     Unknown,
 };

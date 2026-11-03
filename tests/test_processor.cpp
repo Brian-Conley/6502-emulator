@@ -3732,7 +3732,6 @@ TEST_CASE("Instruction ORA", "[Processor][ORA]") {
 
 /****************************************
  * Group: Shift and Rotate Instructions *
- * ASL, LSR, ROL, ROR                   *
  ****************************************/
 
 TEST_CASE("Instruction ASL", "[Processor][ASL]") {
@@ -4119,8 +4118,6 @@ TEST_CASE("Instruction ROL", "[Processor][ROL]") {
         }
     }
 }
-
-// TODO ROR
 
 /**********************************
  * Group: Comparison Instructions *

@@ -182,13 +182,6 @@ constexpr std::array<Instruction, 256> initializeOpcodeTable() {
     table[0x2E] = { InstructionType::ROL, AddressingMode::Absolute,  6 };
     table[0x3E] = { InstructionType::ROL, AddressingMode::AbsoluteX, 7 };
 
-    // ROR
-    table[0x6A] = { InstructionType::ROR, AddressingMode::A,         2 };
-    table[0x66] = { InstructionType::ROR, AddressingMode::ZeroPage,  5 };
-    table[0x76] = { InstructionType::ROR, AddressingMode::ZeroPageX, 6 };
-    table[0x6E] = { InstructionType::ROR, AddressingMode::Absolute,  6 };
-    table[0x7E] = { InstructionType::ROR, AddressingMode::AbsoluteX, 7 };
-
     // Returns
     table[0x40] = { InstructionType::RTI, AddressingMode::Implied, 6 };
     table[0x60] = { InstructionType::RTS, AddressingMode::Implied, 6 };
