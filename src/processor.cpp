@@ -569,8 +569,10 @@ void Mos6502::opLDY(AddressingMode mode) {
 
 void Mos6502::opLSR(AddressingMode mode) {
     Word value;
+    bool carry_out;
     if (mode == AddressingMode::A) {
         value = a;
+        carry_out = (value & 0x01) != 0;
         value = value >> 1;
         a = value;
     } else {
@@ -578,12 +580,13 @@ void Mos6502::opLSR(AddressingMode mode) {
         if (addr.pageCrossed)
             ++CumulativeCycles;
         value = readByte(addr.address);
+        carry_out = (value & 0x01) != 0;
         value = value >> 1;
         writeByte(addr.address, value);
     }
     setFlag(Flags::N, false);
     setZeroFromValue(value);
-    setCarryFromValue(value);
+    setFlag(Flags::C, carry_out);
 }
 
 void Mos6502::opNOP() {
