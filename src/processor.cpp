@@ -629,14 +629,14 @@ void Mos6502::opROL(AddressingMode mode) {
         addr = ra.address;
         value = readByte(addr);
     }
-    bool oldCarry = getFlag(Flags::C);
-    bool newCarry = value & 0x80;
-    value = (value << 1) | oldCarry;
+    bool carry_in = getFlag(Flags::C);
+    bool carry_out = (value & 0x80) != 0;
+    value = (value << 1) | carry_in;
     if (mode == AddressingMode::A) { a = value; }
     else { writeByte(addr, value); }
-    setFlag(Flags::N, value);
-    setFlag(Flags::Z, value);
-    setFlag(Flags::C, newCarry);
+    setNegativeFromValue(value);
+    setZeroFromValue(value);
+    setFlag(Flags::C, carry_out);
 }
 
 void Mos6502::opROR(AddressingMode mode) {
