@@ -439,30 +439,30 @@ void Mos6502::opCMP(AddressingMode mode) {
     auto addr = resolveAddress(mode);
     if (addr.pageCrossed)
         ++CumulativeCycles;
-    Word value = a - readByte(addr.address);
-    setNegativeFromValue(value);
-    setZeroFromValue(value);
-    setCarryFromValue(value);
+    Byte value = readByte(addr.address);
+    setNegativeFromValue(a - value);
+    setFlag(Flags::Z, a == value ? true : false);
+    setFlag(Flags::C, a >= value ? true : false);
 }
 
 void Mos6502::opCPX(AddressingMode mode) {
     auto addr = resolveAddress(mode);
     if (addr.pageCrossed)
         ++CumulativeCycles;
-    Word value = x - readByte(addr.address);
-    setNegativeFromValue(value);
-    setZeroFromValue(value);
-    setCarryFromValue(value);
+    Byte value = readByte(addr.address);
+    setNegativeFromValue(x - value);
+    setFlag(Flags::Z, x == value ? true : false);
+    setFlag(Flags::C, x >= value ? true : false);
 }
 
 void Mos6502::opCPY(AddressingMode mode) {
     auto addr = resolveAddress(mode);
     if (addr.pageCrossed)
         ++CumulativeCycles;
-    Word value = y - readByte(addr.address);
-    setNegativeFromValue(value);
-    setZeroFromValue(value);
-    setCarryFromValue(value);
+    Byte value = readByte(addr.address);
+    setNegativeFromValue(y - value);
+    setFlag(Flags::Z, y == value ? true : false);
+    setFlag(Flags::C, y >= value ? true : false);
 }
 
 void Mos6502::opDEC(AddressingMode mode) {
