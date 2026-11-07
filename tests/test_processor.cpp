@@ -4880,9 +4880,73 @@ TEST_CASE("Instruction CPY", "[Processor][CPY]") {
  * JMP, JSR, RTS                          *
  ******************************************/
 
-// TODO JMP
-// TODO JSR
-// TODO RTS
+TEST_CASE("Instruction JMP", "[Processor][JMP]") {
+    CpuTestFixture sys;
+    const Word addr_target = 0x2000;
+    const Word addr_intermediate = 0x1234;
+
+    SECTION("Addressing Modes") {
+        SECTION("Absolute") {
+            const Byte opcode = 0x4C;
+            sys.load_program({
+                {0x8000, { opcode, addr_target & 0xFF, addr_target >> 8 }}
+            });
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == addr_target);
+            REQUIRE(state.totalcycles == 3);
+        }
+
+        SECTION("Indirect") {
+            const Byte opcode = 0x6C;
+            sys.load_program({
+                {0x8000, { opcode, addr_intermediate & 0xFF, addr_intermediate >> 8 }},
+                { addr_intermediate, { addr_target & 0xFF, addr_target >> 8 } }
+            });
+            sys.processor.step();
+            auto state = sys.state();
+            REQUIRE(state.pc == addr_target);
+            REQUIRE(state.totalcycles == 5);
+        }
+    }
+}
+
+TEST_CASE("Instruction JSR", "[Processor][JSR]") {
+    CpuTestFixture sys;
+    const Byte opcode = 0x20;
+    const Word addr_target = 0x2000;
+    const Word addr_start = 0x8000;
+    const Word addr_return = addr_start + 0x0002;
+    sys.load_program({
+        {0x8000, { opcode, addr_target & 0xFF, addr_target >> 8 }}
+    });
+    sys.processor.step();
+    auto state = sys.state();
+    REQUIRE(state.pc == addr_target);
+    REQUIRE(state.totalcycles == 6);
+    REQUIRE(state.stackptr == 0xFD);
+    REQUIRE(sys.memory[0x01FE] == (addr_return & 0xFF));
+    REQUIRE(sys.memory[0x01FF] == (addr_return >> 8));
+}
+
+TEST_CASE("Instruction RTS", "[Processor][RTS]") {
+    CpuTestFixture sys;
+    const Byte opcode = 0x60;
+    const Word addr_start = 0x2000;
+    const Word addr_caller = 0x8000;
+    const Word addr_return = addr_caller + 0x0002;
+    sys.load_program({
+        {addr_start, { opcode }}
+    });
+    sys.processor.registerSet(Mos6502::Register::StackPointer, 0xFD);
+    sys.memory[0x01FE] = (addr_return & 0xFF);
+    sys.memory[0x01FF] = (addr_return >> 8);
+    sys.processor.step();
+    auto state = sys.state();
+    REQUIRE(state.pc == addr_return + 0x01);
+    REQUIRE(state.totalcycles == 6);
+    REQUIRE(state.stackptr == 0xFF);
+}
 
 /*****************************
  * Group: Other Instructions *
