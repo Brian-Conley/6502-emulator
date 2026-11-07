@@ -429,10 +429,10 @@ void Mos6502::opBIT(AddressingMode mode) {
 void Mos6502::opBRK() {
     ++pc;
     stackPush(pc >> 8);
-    stackPush(pc * 0xFF);
+    stackPush(pc & 0xFF);
     stackPush(sr | 0b00110000);
     setFlag(Flags::I, true);
-    pc = readByte(0xFFFE | (readByte(0xFFFF) << 8));
+    pc = readByte(0xFFFE) | (readByte(0xFFFF) << 8);
 }
 
 void Mos6502::opCMP(AddressingMode mode) {

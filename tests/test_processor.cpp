@@ -4953,6 +4953,59 @@ TEST_CASE("Instruction RTS", "[Processor][RTS]") {
  * BRK, NOP, RTI             *
  *****************************/
 
-// TODO BRK
-// TODO NOP
-// TODO RTI
+TEST_CASE("Instruction BRK", "[Processor][BRK]") {
+    CpuTestFixture sys;
+    const Byte opcode = 0x00;
+    const Word addr_interrupt = 0x2000;
+    const Word addr_start = 0x8000;
+    const Word addr_return = addr_start + 0x0002;
+    sys.load_program({
+        {addr_start, { opcode }}
+    });
+    sys.memory[0xFFFE] = addr_interrupt & 0xFF;
+    sys.memory[0xFFFF] = addr_interrupt >> 8;
+    sys.processor.step();
+    auto state = sys.state();
+    REQUIRE(state.pc == addr_interrupt);
+    REQUIRE(state.totalcycles == 7);
+    REQUIRE(state.stackptr == 0xFC);
+    REQUIRE(flag_status(FLAG_BREAK, sys.memory[0x01FD]));
+    REQUIRE(flag_status(FLAG_UNUSED, sys.memory[0x01FD]));
+    REQUIRE(flag_status(FLAG_INTERRUPT_DISABLE, state.status));
+    REQUIRE(sys.memory[0x01FE] == (addr_return & 0xFF));
+    REQUIRE(sys.memory[0x01FF] == (addr_return >> 8));
+}
+
+TEST_CASE("Instruction NOP", "[Processor][NOP]") {
+    CpuTestFixture sys;
+    const Byte opcode = 0xEA;
+    const Word addr_start = 0x8000;
+    sys.load_program({
+        {addr_start, { opcode }}
+    });
+    sys.processor.step();
+    auto state = sys.state();
+    REQUIRE(state.pc == addr_start + 1);
+    REQUIRE(state.totalcycles == 2);
+}
+
+TEST_CASE("Instruction RTI", "[Processor][RTI]") {
+    CpuTestFixture sys;
+    const Byte opcode = 0x40;
+    const Word addr_start = 0x2000;
+    const Word addr_caller = 0x8000;
+    const Word addr_return = addr_caller + 0x0002;
+    sys.load_program({
+        {addr_start, { opcode }}
+    });
+    sys.processor.registerSet(Mos6502::Register::StackPointer, 0xFC);
+    sys.memory[0x01FD] = 0b11111111 ^ FLAG_INTERRUPT_DISABLE;
+    sys.memory[0x01FE] = (addr_return & 0xFF);
+    sys.memory[0x01FF] = (addr_return >> 8);
+    sys.processor.step();
+    auto state = sys.state();
+    REQUIRE(state.pc == addr_return);
+    REQUIRE(state.totalcycles == 6);
+    REQUIRE(state.stackptr == 0xFF);
+    REQUIRE_FALSE(flag_status(FLAG_BREAK, state.status));
+}
