@@ -1,0 +1,44 @@
+{
+    "name": "Game of Life config",
+    "devices": [
+        {
+            "name": "Zero Page RAM",
+            "type": "ram",
+            "start_page": 0,
+            "size_in_pages": 1
+        },
+        {
+            "name": "Stack RAM",
+            "type": "ram",
+            "start_page": 1,
+            "size_in_pages": 1
+        },
+        {
+            "name": "System Interface",
+            "type": "system_interface",
+            "start_page": 2
+        },
+        {
+            "name": "Program RAM",
+            "type": "ram",
+            "start_page": 126,
+            "size_in_pages": 2
+        },
+        {
+            "name": "Program ROM",
+            "type": "rom",
+            "start_page": 128,
+            "size_in_pages": 128,
+            "data": "GoL.bin"
+        },
+        {
+            "name": "System Display",
+            "type": "display",
+            "subtype": "pixel",
+            "start_page": 3,
+            "width": 16,
+            "height": 16,
+            "refresh_rate": 8
+        }
+    ]
+}

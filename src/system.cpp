@@ -61,7 +61,7 @@ void System::run(std::ostream& os) {
         next_frame += frame_interval;
         expected_cycles += cycles_per_frame;
     }
-    os << "\nTotal runtime cycles: " << processor.getCumulativeCycles() << "\n";
+    os << "Total runtime cycles: " << processor.getCumulativeCycles() << "\n";
 }
 
 }

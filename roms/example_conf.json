@@ -1,0 +1,67 @@
+{
+    "name": "Example configuration file.",
+    "_comment": "A demonstration of how to initialize each device type.",
+    "_comment2": "If multiple devices are mapped to the same page, only the last defined device will have reads/writes in that address space.",
+    "devices": [
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "system_interface",
+            "start_page": 2
+        },
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "ram",
+            "start_page": 0,
+            "size_in_pages": 1
+        },
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "rom",
+            "start_page": 128,
+            "size_in_pages": 128,
+            "data": "some_file.bin",
+
+            "_comment": "Note: A program ROM must define the interrupt vectors in 0xFFFA-0xFFFF."
+        },
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "ram_bank",
+            "start_page": 3,
+            "address_width": 16,
+
+            "_comment": "Any bank device will use exactly 2 pages",
+            "_comment2": "Valid address widths: 16 | 24 | 32 bit"
+        },
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "rom_bank",
+            "start_page": 3,
+            "address_width": 16,
+            "data": "some_file.bin",
+
+            "_comment": "Any bank device will use exactly 2 pages",
+            "_comment2": "Valid address widths: 16 | 24 | 32 bit"
+        },
+
+        {
+            "name": "Name of the device (for readability in this file)",
+            "type": "display",
+            "subtype": "pixel",
+            "start_page": 3,
+            "width": 16,
+            "height": 16,
+            "refresh_rate": 8,
+
+            "_comment": "The number of pages used is the minimum number of pages required to hold width*height bytes.",
+            "_comment2": "Valid subtypes: pixel | ascii",
+            "_comment3": "Valid refresh rates: 1 | 2 | 4 | 5 | 8 | 10 | 20 | 25",
+            "_comment4": "You may define up to one display device."
+        }
+
+    ]
+}

@@ -7,6 +7,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ------------------------------
+# External Deps
+# ------------------------------
+
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+# ------------------------------
 # Emulator library
 # ------------------------------
 
@@ -48,6 +59,7 @@ add_executable(mos6502
 
 target_link_libraries(mos6502 PRIVATE
     mos6502_lib
+    nlohmann_json::nlohmann_json
 )
 
 # ------------------------------
