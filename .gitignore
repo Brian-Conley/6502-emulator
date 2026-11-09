@@ -43,6 +43,7 @@ tmp.txt
 *.app
 
 # Build directories
+bin/
 build/
 Build/
 build-*/
