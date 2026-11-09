@@ -1,7 +1,7 @@
 {
     "name": "Example configuration file.",
     "_comment": "A demonstration of how to initialize each device type.",
-    "_comment2": "If multiple devices are mapped to the same page, only the last defined device will have reads/writes in that address space.",
+    "_comment2": "Devices are unable to overlap in the page map. Trying to create a device that overlaps another will fail.",
     "devices": [
 
         {
