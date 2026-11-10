@@ -47,6 +47,7 @@ target_compile_options(mos6502_lib PRIVATE
     -Wpedantic
     -O2
     -flto
+    -fsanitize=undefined,address
 )
 
 # ------------------------------
@@ -60,6 +61,10 @@ add_executable(mos6502
 target_link_libraries(mos6502 PRIVATE
     mos6502_lib
     nlohmann_json::nlohmann_json
+)
+
+target_link_options(mos6502 PRIVATE
+    -fsanitize=undefined,address
 )
 
 # ------------------------------
